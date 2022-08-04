@@ -278,6 +278,25 @@ def sale_select_all():
     return ret
 
 
+def sale_select_by_batchId(batchId):
+    sql = "SELECT * FROM sales WHERE batchId='" + str(batchId) + "'"
+    ret = None
+
+    conn = create_connection()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute(sql)
+            ret = cur.fetchall()
+        except Error as e:
+            print(e)
+    else:
+        print("Error! Cannot create the database connection.")
+    conn.close()
+
+    return ret
+
+
 def sale_select_by_id(id):
     sql = "SELECT * FROM sales WHERE id='" + str(id) + "'"
     ret = None

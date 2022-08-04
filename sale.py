@@ -43,3 +43,11 @@ class Sale:
 
     def getNote(self):
         return self.note
+
+
+    def getAsString(self):
+        return f"{self.id} {self.datetime} {self.batchId} {self.price} {self.amount} {self.note}"
+
+
+    def print(self):
+        print(self.getAsString())

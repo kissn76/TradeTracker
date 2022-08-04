@@ -20,3 +20,11 @@ class Provider:
 
     def getName(self):
         return self.name
+
+
+    def getAsString(self):
+        return f"{self.id} {self.code} {self.name}"
+
+
+    def print(self):
+        print(self.getAsString())
