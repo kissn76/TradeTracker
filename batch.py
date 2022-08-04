@@ -6,46 +6,76 @@ import currency
 
 
 class Batch:
-    def __init__(self):
+    def __init__(self, id=None, providerId=None, stockId=None, datetime=None, price=None, priceCurrencyId=None, amount=None, note=None):
         self.id = None
+        self.providerId = None
         self.provider = None
+        self.stockId = None
         self.stock = None
         self.datetime = None
         self.price = None
+        self.priceCurrencyId = None
         self.priceCurrency = None
         self.amount = None
         self.note = None
         self.sales = []
         self.balance = 0
 
+        if id is not None:
+            self.load_by_id(id)
+            self.load_sales()
+        else:
+            self.setClass(providerId, stockId, datetime, price, priceCurrencyId, amount, note)
+            self.id = self.save()
+            self.setObjects()
+
+
+    def save(self):
+        ret = None
+        if self.id is None:
+            ret = db.batch_insert(self.providerId, self.stockId, self.datetime, self.price, self.priceCurrencyId, self.amount, self.note)
+        else:
+            pass # update
+        return ret
+
 
     def load_by_id(self, id):
         p = db.batch_select_by_id(id)
         self.id = p[0][0]
-        providerId = p[0][1]
-        stockId = p[0][2]
-        self.datetime = p[0][3]
-        self.price = p[0][4]
-        priceCurrencyId = p[0][5]
-        self.amount = p[0][6]
-        self.note = p[0][7]
-        self.provider = provider.Provider()
-        self.provider.load_by_id(providerId)
-        self.stock = stock.Stock()
-        self.stock.load_by_id(stockId)
-        self.priceCurrency = currency.Currency()
-        self.priceCurrency.load_by_id(priceCurrencyId)
+        self.setClass(p[0][1], p[0][2], p[0][3], p[0][4], p[0][5], p[0][6], p[0][7])
+        self.setObjects()
+
+
+    def setClass(self, providerId, stockId, datetime, price, priceCurrencyId, amount, note=None):
+        self.providerId = providerId
+        self.stockId = stockId
+        self.datetime = datetime
+        self.price = price
+        self.priceCurrencyId = priceCurrencyId
+        self.amount = amount
+        self.note = note
         self.balance = self.amount
-        self.load_sales()
+
+
+    def setObjects(self):
+        self.provider = provider.Provider(self.providerId)
+        self.stock = stock.Stock(self.stockId)
+        self.priceCurrency = currency.Currency(self.priceCurrencyId)
 
 
     def load_sales(self):
-        sales = db.sale_select_by_batchId(self.id)
+        self.sales.clear()
+        self.balance = self.amount
+        sales = db.sale_select_id_by_batchId(self.id)
         for s in sales:
-            obj = sale.Sale()
-            obj.load_by_id(s[0])
+            obj = sale.Sale(s[0])
             self.sales.append(obj)
             self.balance -= obj.getAmount()
+
+
+    def sell(self, datetime, price, amount, note):
+        sale.Sale(None, datetime, self.id, price, amount, note)
+        self.load_sales()
 
 
     def getProvider(self):
@@ -118,12 +148,11 @@ class Batch:
 
 
 def getBaches():
-    baches = db.batch_select_all()
+    baches = db.batch_select_id_all()
     ret = []
 
     for bach in baches:
-        tmp = Batch()
-        tmp.load_by_id(bach[0])
+        tmp = Batch(bach[0])
         ret.append(tmp)
 
     return ret

@@ -94,17 +94,17 @@ def data_insert(table, values):
     return ret
 
 
-def data_select(table, values=None):
+def data_select(table, values=None, fields=["*"]):
     sql = None
     ret = None
 
     if values is None:
-        sql = "SELECT * FROM {}".format(table)
+        sql = "SELECT {} FROM {}".format(','.join(fields), table)
     else:
         where = []
         for key, val in values.items():
             where.append(str(key) + "='" + str(val) + "'")
-        sql = "SELECT * FROM {} WHERE {}".format(table, ' AND '.join(where))
+        sql = "SELECT {} FROM {} WHERE {}".format(','.join(fields), table, ' AND '.join(where))
 
     conn = create_connection()
     if conn is not None:
@@ -176,6 +176,11 @@ def batch_select_all():
     return ret
 
 
+def batch_select_id_all():
+    ret = data_select("batches", fields=["id"])
+    return ret
+
+
 def batch_select_by_id(id):
     ret = data_select("batches", {"id": id})
     return ret
@@ -191,8 +196,8 @@ def sale_select_all():
     return ret
 
 
-def sale_select_by_batchId(batchId):
-    ret = data_select("sales", {"batchId": batchId})
+def sale_select_id_by_batchId(batchId):
+    ret = data_select("sales", {"batchId": batchId}, ["id"])
     return ret
 
 
