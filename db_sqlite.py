@@ -34,6 +34,13 @@ def create_tables():
                                         name text
                                     ); """
 
+    sql_create_table_currency = """ CREATE TABLE IF NOT EXISTS currencies (
+                                        id integer PRIMARY KEY,
+                                        code text NOT NULL UNIQUE,
+                                        name text,
+                                        symbol text
+                                    ); """
+
     sql_create_table_stock = """ CREATE TABLE IF NOT EXISTS stocks (
                                         id integer PRIMARY KEY,
                                         code text NOT NULL UNIQUE,
@@ -46,6 +53,7 @@ def create_tables():
                                         stockId integer,
                                         datetime text,
                                         price real,
+                                        priceCurrencyId integer,
                                         amount real,
                                         note text
                                     ); """
@@ -60,20 +68,21 @@ def create_tables():
                                     ); """
 
     create_table(sql_create_table_providers)
+    create_table(sql_create_table_currency)
     create_table(sql_create_table_stock)
     create_table(sql_create_table_batch)
     create_table(sql_create_table_sales)
 
 
-def provider_insert(values):
-    sql = "INSERT INTO providers(code, name) VALUES(?, ?)"
+def data_insert(table, values):
+    sql = "INSERT INTO {}({}) VALUES({})".format(table, ','.join(tuple(values.keys())), ','.join(['?'] * len(values)))
     ret = None
 
     conn = create_connection()
     if conn is not None:
         try:
             cur = conn.cursor()
-            cur.execute(sql, values)
+            cur.execute(sql, tuple(values.values()))
             conn.commit()
             ret = cur.lastrowid
         except Error as e:
@@ -82,235 +91,111 @@ def provider_insert(values):
         print("Error! Cannot create the database connection.")
     conn.close()
 
+    return ret
+
+
+def data_select(table, values=None):
+    sql = None
+    ret = None
+
+    if values is None:
+        sql = "SELECT * FROM {}".format(table)
+    else:
+        where = []
+        for key, val in values.items():
+            where.append(str(key) + "='" + str(val) + "'")
+        sql = "SELECT * FROM {} WHERE {}".format(table, ' AND '.join(where))
+
+    conn = create_connection()
+    if conn is not None:
+        try:
+            cur = conn.cursor()
+            cur.execute(sql)
+            ret = cur.fetchall()
+        except Error as e:
+            print(e)
+    else:
+        print("Error! Cannot create the database connection.")
+    conn.close()
+
+    return ret
+
+
+def provider_insert(code, name):
+    ret = data_insert("providers", {"code": code, "name": name})
     return ret
 
 
 def provider_select_all():
-    sql = "SELECT * FROM providers"
-    ret = None
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            ret = cur.fetchall()
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
-
+    ret = data_select("providers")
     return ret
 
 
 def provider_select_by_id(id):
-    sql = "SELECT * FROM providers WHERE id='" + str(id) + "'"
-    ret = None
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            ret = cur.fetchall()
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
-
+    ret = data_select("providers", {"id": id})
     return ret
 
 
-def stock_insert(values):
-    sql = "INSERT INTO stocks(code, name) VALUES(?, ?)"
-    ret = None
+def currency_insert(code, name, symbol):
+    ret = data_insert("currencies", {"code": code, "name": name, "symbol": symbol})
+    return ret
 
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql, values)
-            conn.commit()
-            ret = cur.lastrowid
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
 
+def currency_select_all():
+    ret = data_select("currencies")
+    return ret
+
+
+def currency_select_by_id(id):
+    ret = data_select("currencies", {"id": id})
+    return ret
+
+
+def stock_insert(code, name):
+    ret = data_insert("stocks", {"code": code, "name": name})
     return ret
 
 
 def stock_select_all():
-    sql = "SELECT * FROM stocks"
-    ret = None
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            ret = cur.fetchall()
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
-
+    ret = data_select("stocks")
     return ret
 
 
 def stock_select_by_id(id):
-    sql = "SELECT * FROM stocks WHERE id='" + str(id) + "'"
-    ret = None
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            ret = cur.fetchall()
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
-
+    ret = data_select("stocks", {"id": id})
     return ret
 
 
-def batch_insert(values):
-    sql = "INSERT INTO batches(providerId, stockId, datetime, price, amount, note) VALUES(?, ?, ?, ?, ?, ?)"
-    ret = None
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql, values)
-            conn.commit()
-            ret = cur.lastrowid
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
-
+def batch_insert(providerId, stockId, datetime, price, priceCurrencyId, amount, note):
+    ret = data_insert("batches", {"providerId": providerId, "stockId": stockId, "datetime": datetime, "price": price, "priceCurrencyId": priceCurrencyId, "amount": amount, "note": note})
     return ret
 
 
 def batch_select_all():
-    sql = "SELECT * FROM batches"
-    ret = None
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            ret = cur.fetchall()
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
-
+    ret = data_select("batches")
     return ret
 
 
 def batch_select_by_id(id):
-    sql = "SELECT * FROM batches WHERE id='" + str(id) + "'"
-    ret = None
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            ret = cur.fetchall()
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
-
+    ret = data_select("batches", {"id": id})
     return ret
 
 
-def sale_insert(values):
-    sql = "INSERT INTO sales(datetime, batchId, price, amount, note) VALUES(?, ?, ?, ?, ?)"
-    ret = None
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql, values)
-            conn.commit()
-            ret = cur.lastrowid
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
-
+def sale_insert(datetime, batchId, price, amount, note):
+    ret = data_insert("sales", {"datetime": datetime, "batchId": batchId, "price": price, "amount": amount, "note": note})
     return ret
 
 
 def sale_select_all():
-    sql = "SELECT * FROM sales"
-    ret = None
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            ret = cur.fetchall()
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
-
+    ret = data_select("sales")
     return ret
 
 
 def sale_select_by_batchId(batchId):
-    sql = "SELECT * FROM sales WHERE batchId='" + str(batchId) + "'"
-    ret = None
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            ret = cur.fetchall()
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
-
+    ret = data_select("sales", {"batchId": batchId})
     return ret
 
 
 def sale_select_by_id(id):
-    sql = "SELECT * FROM sales WHERE id='" + str(id) + "'"
-    ret = None
-
-    conn = create_connection()
-    if conn is not None:
-        try:
-            cur = conn.cursor()
-            cur.execute(sql)
-            ret = cur.fetchall()
-        except Error as e:
-            print(e)
-    else:
-        print("Error! Cannot create the database connection.")
-    conn.close()
-
+    ret = data_select("sales", {"id": id})
     return ret
