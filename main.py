@@ -1,5 +1,5 @@
-import db_sqlite as db
-import batch, provider, currency, stock
+from lib import db_sqlite as db
+from lib import batch, provider, stock, sale, currency
 
 
 def create_base():
@@ -25,7 +25,7 @@ def create_base():
 
 
 def create_batches():
-    # batch.Batch(None, providerId, stockId, datetime, price, priceCurrencyId, amount, note)
+    # batch.Batch(None(id), providerId, stockId, datetime, price, priceCurrencyId, amount, note)
     b1 = batch.Batch(None, 1, 1, "2022-05-04", 939562, 1, 2600, None)
     b2 = batch.Batch(None, 1, 1, "2022-05-31", 200000, 1, 537.45, None)
     b3 = batch.Batch(None, 1, 1, "2022-06-02", 4700000, 1, 12569.2, None)
