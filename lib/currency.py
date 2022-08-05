@@ -12,7 +12,8 @@ class Currency:
             self.load_by_id(id)
         else:
             self.setClass(code, name, symbol)
-            self.id = self.save()
+            if self.code is not None:
+                self.id = self.save()
 
 
     def save(self):
@@ -26,14 +27,19 @@ class Currency:
 
     def load_by_id(self, id):
         p = db.currency_select_by_id(id)
-        self.id = p[0][0]
-        self.setClass(p[0][1], p[0][2], p[0][3])
+        if len(p) > 0:
+            self.id = p[0][0]
+            self.setClass(p[0][1], p[0][2], p[0][3])
 
 
     def setClass(self, code, name, symbol):
         self.code = code
         self.name = name
         self.symbol = symbol
+
+
+    def getId(self):
+        return self.id
 
 
     def getCode(self):
