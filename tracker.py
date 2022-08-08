@@ -118,6 +118,60 @@ def buy(args):
     print(f"{'':-^100}")
     print(f"{dt}|{(price + ' ' + currencyObj.getSymbol()):>16}|{amount:>16}|{batch_unit_price:16,.2f}|{note}")
 
+    menu_options = {
+            1: 'Provider',
+            2: 'Stock',
+            3: 'Date',
+            4: 'Price',
+            5: 'Currency',
+            6: 'Amount',
+            7: 'Note'
+        }
+    
+    while(True):
+        for key in menu_options.keys():
+            print (key, '--', menu_options[key] )
+        option = ''
+        try:
+            option = int(input('Enter your choice: '))
+        except:
+            print('Wrong input. Please enter a number ...')
+        #Check what choice was entered and act accordingly
+        if option == 1:
+            providerIdNew = None
+            providerObjNew = provider.Provider(providerIdNew)
+            while providerObjNew.getId() is None:
+                all_provider = db.provider_select_all()
+                if all_provider is not None:
+                    print(all_provider)
+                providerIdNew = input("Type provider id: ")
+                providerObjNew = provider.Provider(providerIdNew)
+                if providerIdNew == "":
+                    providerIdNew = providerId
+                    providerObjNew = providerObj
+            providerId = providerIdNew
+            providerObj = providerObjNew
+        elif option == 2:
+            print('Handle option \'Option 2\'')
+        elif option == 3:
+            print('Handle option \'Option 3\'')
+        elif option == 4:
+            print('Thanks message before exiting')
+            exit(0)
+        else:
+            print('Invalid option. Please enter a number between 1 and 4.')
+        
+        if note is None:
+            note = ""
+
+        print(f"Provider: {providerObj.getName()}")
+        print(f"Stock: {stockObj.getName()}")
+        batch_unit_price = float(price) / float(amount)
+        print(f"{'Date':<19}|{'Price':>16}|{'Amount':>16}|{'Unit price':>16}|{'Note':^35}")
+        print(f"{'':-^100}")
+        print(f"{dt}|{(price + ' ' + currencyObj.getSymbol()):>16}|{amount:>16}|{batch_unit_price:16,.2f}|{note}")
+
+
 
 def main():
     parser = argparse.ArgumentParser(description='TradeTracker command line interface')
