@@ -1,23 +1,62 @@
 import argparse
 from datetime import datetime
 from lib import provider, stock, currency
+from lib import db_sqlite as db
 
 
 def buy(args):
-    providerId = args.provider
+    providerId = None
     providerObj = None
-    stockId = args.stock
+    stockId = None
     stockObj = None
-    dt = args.datetime
-    price = args.price
-    priceCurrencyId = args.currency
+    dt = None
+    price = None
+    priceCurrencyId = None
     currencyObj = None
-    amount = args.amount
-    note = args.note
+    amount = None
+    note = None
 
+    try:
+        providerId = args.provider
+    except AttributeError:
+        providerId = None
+
+    try:
+        stockId = args.stock
+    except AttributeError:
+        stockId = None
+
+    try:
+        dt = args.datetime
+    except AttributeError:
+        dt = None
+    
+    try:
+        price = args.price
+    except AttributeError:
+        price = None
+    
+    try:
+        priceCurrencyId = args.currency
+    except AttributeError:
+        priceCurrencyId = None
+    
+    try:
+        amount = args.amount
+    except AttributeError:
+        amount = None
+    
+    try:
+        note = args.note
+    except AttributeError:
+        note = None
+    
     providerObj = provider.Provider(providerId)
     while providerObj.getId() is None:
         print(f"Provider id is not exists: {providerId}")
+        all_provider = db.provider_select_all()
+        if all_provider is not None:
+            print(all_provider)
         providerId = input("Type provider id: ")
         providerObj = provider.Provider(providerId)
     print(f"Provider: {providerObj.getAsString()}")
@@ -25,6 +64,9 @@ def buy(args):
     stockObj = stock.Stock(stockId)
     while stockObj.getId() is None:
         print(f"Stock id is not exists: {stockId}")
+        all_stocks = db.stock_select_all()
+        if all_stocks is not None:
+            print(all_stocks)
         stockId = input("Type stock id: ")
         stockObj = stock.Stock(stockId)
     print(f"Stock: {stockObj.getAsString()}")
@@ -37,7 +79,7 @@ def buy(args):
     else:
         dt = dtt
     while dtt is None:
-        dt = input("Type date and time of transaction: ")
+        dt = input(f'Type date and time of transaction (format: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}):')
         try:
             dtt = datetime.fromisoformat(dt)
         except:
@@ -54,6 +96,9 @@ def buy(args):
     currencyObj = currency.Currency(priceCurrencyId)
     while currencyObj.getId() is None:
         print(f"Currency id is not exists: {priceCurrencyId}")
+        all_currencies = db.currency_select_all()
+        if all_currencies is not None:
+            print(all_currencies)
         priceCurrencyId = input("Type currency id: ")
         currencyObj = currency.Currency(priceCurrencyId)
     print(f"Currency: {currencyObj.getAsString()}")
@@ -62,6 +107,16 @@ def buy(args):
         print(f"Amount error: {amount}")
         amount = input("Type amount of transaction: ")
     print(f"Amount of transaction: {amount}")
+
+    if note is None:
+        note = ""
+
+    print(f"Provider: {providerObj.getName()}")
+    print(f"Stock: {stockObj.getName()}")
+    batch_unit_price = float(price) / float(amount)
+    print(f"{'Date':<19}|{'Price':>16}|{'Amount':>16}|{'Unit price':>16}|{'Note':^35}")
+    print(f"{'':-^100}")
+    print(f"{dt}|{(price + ' ' + currencyObj.getSymbol()):>16}|{amount:>16}|{batch_unit_price:16,.2f}|{note}")
 
 
 def main():
@@ -96,7 +151,33 @@ def main():
     elif args.subcommand == "list":
         print("List existing batches")
     elif args.subcommand is None:
-        print("No subcommand")
+        menu_options = {
+            1: 'Buy',
+            2: 'Sell',
+            3: 'List',
+            4: 'Exit'
+        }
+        while(True):
+            for key in menu_options.keys():
+                print (key, '--', menu_options[key] )
+            option = ''
+            try:
+                option = int(input('Enter your choice: '))
+            except:
+                print('Wrong input. Please enter a number ...')
+            #Check what choice was entered and act accordingly
+            if option == 1:
+                print('Buy a new batch')
+                buy(None)
+            elif option == 2:
+                print('Handle option \'Option 2\'')
+            elif option == 3:
+                print('Handle option \'Option 3\'')
+            elif option == 4:
+                print('Thanks message before exiting')
+                exit(0)
+            else:
+                print('Invalid option. Please enter a number between 1 and 4.')
     else:
         print("Subcommand error")
         exit(0)
