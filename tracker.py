@@ -189,9 +189,17 @@ def menu_loop():
         elif menu_code == "menu_provider_new":
             menu_code = menu_provider_new()
         elif menu_code == "menu_stock":
-            pass
+            menu_code = menu_stock()
+        elif menu_code == "menu_stock_list":
+            menu_code = menu_stock(True)
+        elif menu_code == "menu_stock_new":
+            menu_code = menu_stock_new()
         elif menu_code == "menu_currency":
-            pass
+            menu_code = menu_currency()
+        elif menu_code == "menu_currency_list":
+            menu_code = menu_currency(True)
+        elif menu_code == "menu_currency_new":
+            menu_code = menu_currency_new()
         elif menu_code == "program_exit":
             exit()
 
@@ -243,8 +251,89 @@ def menu_provider_new():
 
     code = input("Type provider code: ")
     name = input("Type provider name: ")
-    provider.Provider(id, code, name)
+    obj = provider.Provider(id, code, name)
+    if len(obj.error) > 0:
+        print(f"Error: {obj.error}")
+    else:
+        print(f"New provider: {obj.getAsString()}")
+    input("Press Enter to continue...")
     return "menu_provider"
+
+
+def menu_stock(list_stocks=False):
+    head = "Stock menu"
+    menu_options = {
+        1: "List",
+        2: "New",
+        0: "Back to main menu"
+    }
+    footer = None
+    if list_stocks is True:
+        all_stock = db.stock_select_all()
+        if all_stock is not None:
+            footer = all_stock
+    option = get_menu_option(head, menu_options, footer=footer)
+    if option == 0:
+        return "menu_main"
+    elif option == 1:
+        return "menu_stock_list"
+    elif option == 2:
+        return "menu_stock_new"
+
+
+def menu_stock_new():
+    id = None
+    code = None
+    name = None
+
+    code = input("Type stock code: ")
+    name = input("Type stock name: ")
+    obj = stock.Stock(id, code, name)
+    if len(obj.error) > 0:
+        print(f"Error: {obj.error}")
+    else:
+        print(f"New stock: {obj.getAsString()}")
+    input("Press Enter to continue...")
+    return "menu_stock"
+
+
+def menu_currency(list_currencies=False):
+    head = "Currency menu"
+    menu_options = {
+        1: "List",
+        2: "New",
+        0: "Back to main menu"
+    }
+    footer = None
+    if list_currencies is True:
+        all_currency = db.currency_select_all()
+        if all_currency is not None:
+            footer = all_currency
+    option = get_menu_option(head, menu_options, footer=footer)
+    if option == 0:
+        return "menu_main"
+    elif option == 1:
+        return "menu_currency_list"
+    elif option == 2:
+        return "menu_currency_new"
+
+
+def menu_currency_new():
+    id = None
+    code = None
+    name = None
+    symbol = None
+
+    code = input("Type currency code: ")
+    name = input("Type currency name: ")
+    symbol = input("Type currency symbol: ")
+    obj = currency.Currency(id, code, name, symbol)
+    if len(obj.error) > 0:
+        print(f"Error: {obj.error}")
+    else:
+        print(f"New currency: {obj.getAsString()}")
+    input("Press Enter to continue...")
+    return "menu_currency"
 
 
 def get_menu_option(head, menu_options, footer=None):

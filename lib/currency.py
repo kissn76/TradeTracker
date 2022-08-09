@@ -7,18 +7,24 @@ class Currency:
         self.code = None
         self.name = None
         self.symbol = None
+        self.error = []
 
         if id is not None:
             self.load_by_id(id)
         else:
             self.setClass(code, name, symbol)
-            if self.code is not None:
-                self.id = self.save()
+            self.id = self.save()
+
+
+    def validate(self):
+        valid = db.currency_validate(self.code, self.name, self.symbol)
+        self.error = valid
 
 
     def save(self):
         ret = None
-        if self.id is None:
+        self.validate()
+        if self.id is None and len(self.error) == 0:
             ret = db.currency_insert(self.code, self.name, self.symbol)
         else:
             pass # update

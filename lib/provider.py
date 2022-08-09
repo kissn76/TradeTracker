@@ -6,18 +6,24 @@ class Provider:
         self.id = None
         self.code = None
         self.name = None
+        self.error = []
 
         if id is not None:
             self.load_by_id(id)
         else:
             self.setClass(code, name)
-            if self.code is not None:
-                self.id = self.save()
+            self.id = self.save()
+
+
+    def validate(self):
+        valid = db.provider_validate(self.code, self.name)
+        self.error = valid
 
 
     def save(self):
         ret = None
-        if self.id is None:
+        self.validate()
+        if self.id is None and len(self.error) == 0:
             ret = db.provider_insert(self.code, self.name)
         else:
             pass # update

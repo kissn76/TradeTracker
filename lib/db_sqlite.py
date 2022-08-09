@@ -33,39 +33,39 @@ def create_tables():
     sql_create_table_providers = """ CREATE TABLE IF NOT EXISTS providers (
                                         id integer PRIMARY KEY,
                                         code text NOT NULL UNIQUE,
-                                        name text
+                                        name text NOT NULL
                                     ); """
 
     sql_create_table_currency = """ CREATE TABLE IF NOT EXISTS currencies (
                                         id integer PRIMARY KEY,
                                         code text NOT NULL UNIQUE,
-                                        name text,
-                                        symbol text
+                                        name text NOT NULL,
+                                        symbol text NOT NULL
                                     ); """
 
     sql_create_table_stock = """ CREATE TABLE IF NOT EXISTS stocks (
                                         id integer PRIMARY KEY,
                                         code text NOT NULL UNIQUE,
-                                        name text
+                                        name text NOT NULL
                                     ); """
 
     sql_create_table_batch = """ CREATE TABLE IF NOT EXISTS batches (
                                         id integer PRIMARY KEY,
-                                        providerId integer,
-                                        stockId integer,
-                                        datetime text,
-                                        price real,
-                                        priceCurrencyId integer,
-                                        amount real,
+                                        providerId integer NOT NULL,
+                                        stockId integer NOT NULL,
+                                        datetime text NOT NULL,
+                                        price real NOT NULL,
+                                        priceCurrencyId integer NOT NULL,
+                                        amount real NOT NULL,
                                         note text
                                     ); """
 
     sql_create_table_sales = """ CREATE TABLE IF NOT EXISTS sales (
                                         id integer PRIMARY KEY,
-                                        datetime text,
-                                        batchId integer,
-                                        price real,
-                                        amount real,
+                                        datetime text NOT NULL,
+                                        batchId integer NOT NULL,
+                                        price real NOT NULL,
+                                        amount real NOT NULL,
                                         note text
                                     ); """
 
@@ -128,6 +128,18 @@ def provider_insert(code, name):
     return ret
 
 
+def provider_validate(code, name):
+    error_messages = []
+    if code is None or code == "":
+        ret = False
+        error_messages.append("code is empty")
+    if name is None or name == "":
+        ret = False
+        error_messages.append("name is empty")
+
+    return error_messages
+
+
 def provider_select_all():
     ret = data_select("providers")
     return ret
@@ -143,6 +155,21 @@ def currency_insert(code, name, symbol):
     return ret
 
 
+def currency_validate(code, name, symbol):
+    error_messages = []
+    if code is None or code == "":
+        ret = False
+        error_messages.append("code is empty")
+    if name is None or name == "":
+        ret = False
+        error_messages.append("name is empty")
+    if symbol is None or symbol == "":
+        ret = False
+        error_messages.append("symbol is empty")
+
+    return error_messages
+
+
 def currency_select_all():
     ret = data_select("currencies")
     return ret
@@ -156,6 +183,18 @@ def currency_select_by_id(id):
 def stock_insert(code, name):
     ret = data_insert("stocks", {"code": code, "name": name})
     return ret
+
+
+def stock_validate(code, name):
+    error_messages = []
+    if code is None or code == "":
+        ret = False
+        error_messages.append("code is empty")
+    if name is None or name == "":
+        ret = False
+        error_messages.append("name is empty")
+
+    return error_messages
 
 
 def stock_select_all():

@@ -54,7 +54,7 @@ def create_batches():
 
 def main():
     create_tables()
-    # create_base()
+    create_base()
 
     # create_batches()
 
