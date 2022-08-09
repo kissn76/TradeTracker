@@ -2,8 +2,11 @@ from lib import db_sqlite as db
 from lib import batch, provider, stock, sale, currency
 
 
-def create_base():
+def create_tables():
     db.create_tables()
+
+
+def create_base():
     provider.Provider(None, "OTP", "OTP Bank NyRT")
     currency.Currency(None, "HUF", "Hungarian forint", "Ft")
     currency.Currency(None, "USD", "United States dollar", "$")
@@ -50,6 +53,7 @@ def create_batches():
 
 
 def main():
+    create_tables()
     # create_base()
 
     # create_batches()

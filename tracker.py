@@ -1,7 +1,12 @@
+import os
 import argparse
 from datetime import datetime
 from lib import provider, stock, currency
 from lib import db_sqlite as db
+
+
+def cls():
+    os.system('cls' if os.name=='nt' else 'clear')
 
 
 def buy(args):
@@ -30,27 +35,27 @@ def buy(args):
         dt = args.datetime
     except AttributeError:
         dt = None
-    
+
     try:
         price = args.price
     except AttributeError:
         price = None
-    
+
     try:
         priceCurrencyId = args.currency
     except AttributeError:
         priceCurrencyId = None
-    
+
     try:
         amount = args.amount
     except AttributeError:
         amount = None
-    
+
     try:
         note = args.note
     except AttributeError:
         note = None
-    
+
     providerObj = provider.Provider(providerId)
     while providerObj.getId() is None:
         print(f"Provider id is not exists: {providerId}")
@@ -127,7 +132,7 @@ def buy(args):
             6: 'Amount',
             7: 'Note'
         }
-    
+
     while(True):
         for key in menu_options.keys():
             print (key, '--', menu_options[key] )
@@ -160,7 +165,7 @@ def buy(args):
             exit(0)
         else:
             print('Invalid option. Please enter a number between 1 and 4.')
-        
+
         if note is None:
             note = ""
 
@@ -171,6 +176,100 @@ def buy(args):
         print(f"{'':-^100}")
         print(f"{dt}|{(price + ' ' + currencyObj.getSymbol()):>16}|{amount:>16}|{batch_unit_price:16,.2f}|{note}")
 
+
+def menu_loop():
+    menu_code = "menu_main"
+    while(True):
+        if menu_code == "menu_main":
+            menu_code = menu_main()
+        elif menu_code == "menu_provider":
+            menu_code = menu_provider()
+        elif menu_code == "menu_provider_list":
+            menu_code = menu_provider(True)
+        elif menu_code == "menu_provider_new":
+            menu_code = menu_provider_new()
+        elif menu_code == "menu_stock":
+            pass
+        elif menu_code == "menu_currency":
+            pass
+        elif menu_code == "program_exit":
+            exit()
+
+
+def menu_main():
+    head = "Main menu"
+    menu_options = {
+        1: "Provider",
+        2: "Stock",
+        3: "Currency",
+        0: "Exit program"
+    }
+    option = get_menu_option(head, menu_options)
+    if option == 0:
+        return "program_exit"
+    elif option == 1:
+        return "menu_provider"
+    elif option == 2:
+        return "menu_stock"
+    elif option == 3:
+        return "menu_currency"
+
+
+def menu_provider(list_providers=False):
+    head = "Provider menu"
+    menu_options = {
+        1: "List",
+        2: "New",
+        0: "Back to main menu"
+    }
+    footer = None
+    if list_providers is True:
+        all_provider = db.provider_select_all()
+        if all_provider is not None:
+            footer = all_provider
+    option = get_menu_option(head, menu_options, footer=footer)
+    if option == 0:
+        return "menu_main"
+    elif option == 1:
+        return "menu_provider_list"
+    elif option == 2:
+        return "menu_provider_new"
+
+
+def menu_provider_new():
+    id = None
+    code = None
+    name = None
+
+    code = input("Type provider code: ")
+    name = input("Type provider name: ")
+    provider.Provider(id, code, name)
+    return "menu_provider"
+
+
+def get_menu_option(head, menu_options, footer=None):
+    cls()
+    if head is not None:
+        print(head)
+    for key in menu_options.keys():
+        print (key, '--', menu_options[key])
+    if footer is not None:
+        print(footer)
+    option = None
+    while option is None:
+        try:
+            option = int(input("Enter your choice: "))
+        except:
+            print("Wrong input. Please enter a number from list above.")
+            option = None
+            continue
+
+        if option in menu_options.keys():
+            return option
+        else:
+            print("Invalid option. Please enter a number from list above.")
+            option = None
+            continue
 
 
 def main():
@@ -205,33 +304,34 @@ def main():
     elif args.subcommand == "list":
         print("List existing batches")
     elif args.subcommand is None:
-        menu_options = {
-            1: 'Buy',
-            2: 'Sell',
-            3: 'List',
-            4: 'Exit'
-        }
-        while(True):
-            for key in menu_options.keys():
-                print (key, '--', menu_options[key] )
-            option = ''
-            try:
-                option = int(input('Enter your choice: '))
-            except:
-                print('Wrong input. Please enter a number ...')
-            #Check what choice was entered and act accordingly
-            if option == 1:
-                print('Buy a new batch')
-                buy(None)
-            elif option == 2:
-                print('Handle option \'Option 2\'')
-            elif option == 3:
-                print('Handle option \'Option 3\'')
-            elif option == 4:
-                print('Thanks message before exiting')
-                exit(0)
-            else:
-                print('Invalid option. Please enter a number between 1 and 4.')
+        menu_loop()
+        # menu_options = {
+        #     1: 'Buy',
+        #     2: 'Sell',
+        #     3: 'List',
+        #     0: 'Exit'
+        # }
+        # while(True):
+        #     for key in menu_options.keys():
+        #         print (key, '--', menu_options[key] )
+        #     option = ''
+        #     try:
+        #         option = int(input('Enter your choice: '))
+        #     except:
+        #         print('Wrong input. Please enter a number ...')
+        #     #Check what choice was entered and act accordingly
+        #     if option == 0:
+        #         print('Thanks message before exiting')
+        #         exit(0)
+        #     elif option == 1:
+        #         print('Buy a new batch')
+        #         buy(None)
+        #     elif option == 2:
+        #         print('Handle option \'Option 2\'')
+        #     elif option == 3:
+        #         print('Handle option \'Option 3\'')
+        #     else:
+        #         print('Invalid option. Please enter a number between 1 and 4.')
     else:
         print("Subcommand error")
         exit(0)
