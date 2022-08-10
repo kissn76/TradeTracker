@@ -60,3 +60,12 @@ class Stock:
 
     def print(self):
         print(self.getAsString())
+
+
+def getStockAll():
+    objects = {}
+    elements = db.stock_select_all()
+    for element in elements:
+        obj = Stock(element[0])
+        objects.update({obj.getId(): obj})
+    return objects

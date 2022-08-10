@@ -232,9 +232,12 @@ def menu_provider(list_providers=False):
     }
     footer = None
     if list_providers is True:
-        all_provider = db.provider_select_all()
-        if all_provider is not None:
-            footer = all_provider
+        text = ""
+        elements = provider.getProviderAll()
+        for element in elements:
+            text += provider.Provider(element).getAsString() + "\n"
+        if text != "":
+            footer = text[:-1]
     option = get_menu_option(head, menu_options, footer=footer)
     if option == 0:
         return "menu_main"
@@ -269,9 +272,12 @@ def menu_stock(list_stocks=False):
     }
     footer = None
     if list_stocks is True:
-        all_stock = db.stock_select_all()
-        if all_stock is not None:
-            footer = all_stock
+        text = ""
+        elements = stock.getStockAll()
+        for element in elements:
+            text += stock.Stock(element).getAsString() + "\n"
+        if text != "":
+            footer = text[:-1]
     option = get_menu_option(head, menu_options, footer=footer)
     if option == 0:
         return "menu_main"
@@ -306,9 +312,12 @@ def menu_currency(list_currencies=False):
     }
     footer = None
     if list_currencies is True:
-        all_currency = db.currency_select_all()
-        if all_currency is not None:
-            footer = all_currency
+        text = ""
+        elements = currency.getCurrencyAll()
+        for element in elements:
+            text += currency.Currency(element).getAsString() + "\n"
+        if text != "":
+            footer = text[:-1]
     option = get_menu_option(head, menu_options, footer=footer)
     if option == 0:
         return "menu_main"

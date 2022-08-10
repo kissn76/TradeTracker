@@ -66,3 +66,12 @@ class Currency:
 
     def print(self):
         print(self.getAsString())
+
+
+def getCurrencyAll():
+    objects = {}
+    elements = db.currency_select_all()
+    for element in elements:
+        obj = Currency(element[0])
+        objects.update({obj.getId(): obj})
+    return objects

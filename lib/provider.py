@@ -60,3 +60,12 @@ class Provider:
 
     def print(self):
         print(self.getAsString())
+
+
+def getProviderAll():
+    objects = {}
+    elements = db.provider_select_all()
+    for element in elements:
+        obj = Provider(element[0])
+        objects.update({obj.getId(): obj})
+    return objects
