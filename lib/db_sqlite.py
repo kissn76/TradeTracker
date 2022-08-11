@@ -129,13 +129,26 @@ def provider_insert(code, name):
 
 
 def provider_validate(code, name):
-    error_messages = []
-    if code is None or code == "":
-        ret = False
-        error_messages.append("code is empty")
-    if name is None or name == "":
-        ret = False
-        error_messages.append("name is empty")
+    error_messages = {}
+    code_errors = []
+    name_errors = []
+
+    if code is None:
+        code_errors.append("Value is None")
+    if code == "":
+        code_errors.append("Value is empty")
+    element = provider_select_by_code(code)
+    if len(element) > 0:
+        code_errors.append("Value already exists, it must be unique")
+    if name is None:
+        name_errors.append("Value is None")
+    if name == "":
+        name_errors.append("Value is empty")
+
+    if len(code_errors) > 0:
+        error_messages.update({"code": code_errors})
+    if len(name_errors) > 0:
+        error_messages.update({"name": name_errors})
 
     return error_messages
 
@@ -150,22 +163,44 @@ def provider_select_by_id(id):
     return ret
 
 
+def provider_select_by_code(code):
+    ret = data_select("providers", {"code": code})
+    return ret
+
+
 def currency_insert(code, name, symbol):
     ret = data_insert("currencies", {"code": code, "name": name, "symbol": symbol})
     return ret
 
 
 def currency_validate(code, name, symbol):
-    error_messages = []
-    if code is None or code == "":
-        ret = False
-        error_messages.append("code is empty")
-    if name is None or name == "":
-        ret = False
-        error_messages.append("name is empty")
-    if symbol is None or symbol == "":
-        ret = False
-        error_messages.append("symbol is empty")
+    error_messages = {}
+    code_errors = []
+    name_errors = []
+    symbol_errors = []
+
+    if code is None:
+        code_errors.append("Value is None")
+    if code == "":
+        code_errors.append("Value is empty")
+    element = currency_select_by_code(code)
+    if len(element) > 0:
+        code_errors.append("Value already exists, it must be unique")
+    if name is None:
+        name_errors.append("Value is None")
+    if name == "":
+        name_errors.append("Value is empty")
+    if symbol is None:
+        symbol_errors.append("Value is None")
+    if symbol == "":
+        symbol_errors.append("Value is empty")
+
+    if len(code_errors) > 0:
+        error_messages.update({"code": code_errors})
+    if len(name_errors) > 0:
+        error_messages.update({"name": name_errors})
+    if len(symbol_errors) > 0:
+        error_messages.update({"symbol": symbol_errors})
 
     return error_messages
 
@@ -180,19 +215,37 @@ def currency_select_by_id(id):
     return ret
 
 
+def currency_select_by_code(code):
+    ret = data_select("currencies", {"code": code})
+    return ret
+
+
 def stock_insert(code, name):
     ret = data_insert("stocks", {"code": code, "name": name})
     return ret
 
 
 def stock_validate(code, name):
-    error_messages = []
-    if code is None or code == "":
-        ret = False
-        error_messages.append("code is empty")
-    if name is None or name == "":
-        ret = False
-        error_messages.append("name is empty")
+    error_messages = {}
+    code_errors = []
+    name_errors = []
+
+    if code is None:
+        code_errors.append("Value is None")
+    if code == "":
+        code_errors.append("Value is empty")
+    element = stock_select_by_code(code)
+    if len(element) > 0:
+        code_errors.append("Value already exists, it must be unique")
+    if name is None:
+        name_errors.append("Value is None")
+    if name == "":
+        name_errors.append("Value is empty")
+
+    if len(code_errors) > 0:
+        error_messages.update({"code": code_errors})
+    if len(name_errors) > 0:
+        error_messages.update({"name": name_errors})
 
     return error_messages
 
@@ -207,9 +260,81 @@ def stock_select_by_id(id):
     return ret
 
 
+def stock_select_by_code(code):
+    ret = data_select("stocks", {"code": code})
+    return ret
+
+
 def batch_insert(providerId, stockId, datetime, price, priceCurrencyId, amount, note):
     ret = data_insert("batches", {"providerId": providerId, "stockId": stockId, "datetime": datetime, "price": price, "priceCurrencyId": priceCurrencyId, "amount": amount, "note": note})
     return ret
+
+
+def batch_validate(providerId, stockId, datetime, price, priceCurrencyId, amount, note):
+    error_messages = {}
+    provider_errors = []
+    stock_errors = []
+    datetime_errors = []
+    price_errors = []
+    priceCurrency_errors = []
+    amount_errors = []
+
+    provider = provider_select_by_id(providerId)
+    if len(provider) == 0:
+        provider_errors.append("Value is not exists")
+
+    stock = stock_select_by_id(stockId)
+    if len(stock) == 0:
+        stock_errors.append("Value is not exists")
+
+    if datetime is None:
+        datetime_errors.append("Value is None")
+    if datetime == "":
+        datetime_errors.append("Value is empty")
+    dtt = None
+    try:
+        dtt = datetime.fromisoformat(datetime)
+    except:
+        dtt = None
+    else:
+        datetime = dtt
+    if dtt is None:
+        datetime_errors.append(f'Date and time error (format: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")})')
+
+    price = price.replace(',', '.')
+    if price is None:
+        price_errors.append("Value is None")
+    if price == "":
+        price_errors.append("Value is empty")
+    if price.replace('.','',1).isdigit() is False:
+        price_errors.append("Value is not a number")
+
+    currency = currency_select_by_id(priceCurrencyId)
+    if len(currency) == 0:
+        priceCurrency_errors.append("Value is not exists")
+
+    amount = amount.replace(',', '.')
+    if amount is None:
+        amount_errors.append("Value is None")
+    if amount == "":
+        amount_errors.append("Value is empty")
+    if amount.replace('.','',1).isdigit() is False:
+        amount_errors.append("Value is not a number")
+
+    if len(provider_errors) > 0:
+        error_messages.update({"provider": provider_errors})
+    if len(stock_errors) > 0:
+        error_messages.update({"stock": stock_errors})
+    if len(datetime_errors) > 0:
+        error_messages.update({"datetime": datetime_errors})
+    if len(price_errors) > 0:
+        error_messages.update({"price": price_errors})
+    if len(priceCurrency_errors) > 0:
+        error_messages.update({"priceCurrency": priceCurrency_errors})
+    if len(amount_errors) > 0:
+        error_messages.update({"amount": amount_errors})
+
+    return error_messages
 
 
 def batch_select_all():

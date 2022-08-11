@@ -17,6 +17,7 @@ class Batch:
         self.note = None
         self.sales = []
         self.balance = 0
+        self.error = {}
 
         if id is not None:
             self.load_by_id(id)
@@ -27,9 +28,15 @@ class Batch:
             self.setObjects()
 
 
+    def validate(self):
+        valid = db.batch_validate(self.providerId, self.stockId, self.datetime, self.price, self.priceCurrencyId, self.amount, self.note)
+        self.error = valid
+
+
     def save(self):
         ret = None
-        if self.id is None:
+        self.validate()
+        if self.id is None and len(self.error) == 0:
             ret = db.batch_insert(self.providerId, self.stockId, self.datetime, self.price, self.priceCurrencyId, self.amount, self.note)
         else:
             pass # update
@@ -71,8 +78,10 @@ class Batch:
 
 
     def sell(self, datetime, price, amount, note):
-        sale.Sale(None, datetime, self.id, price, amount, note)
-        self.load_sales()
+        obj = sale.Sale(None, datetime, self.id, price, amount, note)
+        if obj.getId() is not None:
+            self.sales.append(obj)
+            self.balance -= obj.getAmount()
 
 
     def getId(self):
@@ -148,7 +157,7 @@ class Batch:
         print(f"{'':54}{balance:16,.2f}{profit:68,.2f} {self.priceCurrency.getSymbol()}".replace(",", " "))
 
 
-def getBachesAll():
+def getAll():
     objects = {}
     elements = db.batch_select_all()
     for element in elements:

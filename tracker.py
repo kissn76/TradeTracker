@@ -11,17 +11,16 @@ def cls():
 
 def provider_start(args):
     if args.subcommand2nd == "list":
-        elements = provider.getProviderAll()
-        for element in elements:
-            provider.Provider(element).print()
+        provider.printAll()
     elif args.subcommand2nd == "add":
+        id = None
         code = args.code
         name = args.name
-        obj = provider.Provider(None, code, name)
-        if obj.getId() is not None:
-            obj.print()
+        obj = provider.Provider(id, code, name)
+        if len(obj.error) > 0:
+            print(f"Error: {obj.error}")
         else:
-            print("Create error")
+            print(f"New provider: {obj.getAsString()}")
     else:
         print("Subcommand error")
         exit(0)
@@ -29,18 +28,17 @@ def provider_start(args):
 
 def currency_start(args):
     if args.subcommand2nd == "list":
-        elements = currency.getCurrencyAll()
-        for element in elements:
-            currency.Currency(element).print()
+        currency.printAll()
     elif args.subcommand2nd == "add":
+        id = None
         code = args.code
         name = args.name
         symbol = args.symbol
-        obj = currency.Currency(None, code, name, symbol)
-        if obj.getId() is not None:
-            obj.print()
+        obj = currency.Currency(id, code, name, symbol)
+        if len(obj.error) > 0:
+            print(f"Error: {obj.error}")
         else:
-            print("Create error")
+            print(f"New currency: {obj.getAsString()}")
     else:
         print("Subcommand error")
         exit(0)
@@ -48,96 +46,41 @@ def currency_start(args):
 
 def stock_start(args):
     if args.subcommand2nd == "list":
-        elements = stock.getStockAll()
-        for element in elements:
-            stock.Stock(element).print()
+        stock.printAll()
     elif args.subcommand2nd == "add":
+        id = None
         code = args.code
         name = args.name
-        obj = stock.Stock(None, code, name)
-        if obj.getId() is not None:
-            obj.print()
+        obj = stock.Stock(id, code, name)
+        if len(obj.error) > 0:
+            print(f"Error: {obj.error}")
         else:
-            print("Create error")
+            print(f"New stock: {obj.getAsString()}")
     else:
         print("Subcommand error")
         exit(0)
 
 
 def buy(args):
+    id = None
     providerId = args.provider
-    providerObj = None
     stockId = args.stock
-    stockObj = None
     dt = args.datetime
     price = args.price
     priceCurrencyId = args.currency
-    currencyObj = None
     amount = args.amount
     note = args.note
-
-    providerObj = provider.Provider(providerId)
-    if providerObj.getId() is None:
-        print(f"Provider id is not exists: {providerId}")
-        all_provider = db.provider_select_all()
-        if all_provider is not None:
-            print(all_provider)
-        exit()
-
-    stockObj = stock.Stock(stockId)
-    if stockObj.getId() is None:
-        print(f"Stock id is not exists: {stockId}")
-        all_stocks = db.stock_select_all()
-        if all_stocks is not None:
-            print(all_stocks)
-        exit()
-
-    dtt = None
-    try:
-        dtt = datetime.fromisoformat(dt)
-    except:
-        dtt = None
+    obj = batch.Batch(None, providerId, stockId, dt, price, priceCurrencyId, amount, note)
+    if len(obj.error) > 0:
+        print(f"Error: {obj.error}")
     else:
-        dt = dtt
-    if dtt is None:
-        print(f'Date and time error (format: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}):')
-        exit()
-
-    price = price.replace(',', '.')
-    if price is None or price.replace('.','',1).isdigit() is False:
-        print(f"Price error: {price}")
-        exit()
-
-    currencyObj = currency.Currency(priceCurrencyId)
-    if currencyObj.getId() is None:
-        print(f"Currency id is not exists: {priceCurrencyId}")
-        all_currencies = db.currency_select_all()
-        if all_currencies is not None:
-            print(all_currencies)
-        exit()
-
-    amount = amount.replace(',', '.')
-    if amount is None or amount.replace('.','',1).isdigit() is False:
-        print(f"Amount error: {amount}")
-        exit()
-
-    # if note is None:
-    #     note = ""
-
-    print(f"Provider: {providerObj.getName()}")
-    print(f"Stock: {stockObj.getName()}")
-    batch_unit_price = float(price) / float(amount)
-    print(f"{'Date':<19}|{'Price':>16}|{'Amount':>16}|{'Unit price':>16}|{'Note':^35}")
-    print(f"{'':-^100}")
-    price = f"{float(price):,.2f}" + " " + f"{currencyObj.getSymbol()}"
-    print(f"{dt}|{price:>16}|{float(amount):16,.2f}|{batch_unit_price:16,.2f}|{note}".replace(',', ' '))
-
-    batch.Batch(None, providerId, stockId, dt, price, priceCurrencyId, amount, note)
+        print("New batch")
+        obj.print()
 
 
 def list_batches(args):
     print(args)
-    elements = batch.getBachesAll()
+    elements = batch.getAll()
     for element in elements:
         stock.Stock(element).print()
 
@@ -198,7 +141,7 @@ def menu_provider(list_providers=False):
     footer = None
     if list_providers is True:
         text = ""
-        elements = provider.getProviderAll()
+        elements = provider.getAll()
         for element in elements:
             text += provider.Provider(element).getAsString() + "\n"
         if text != "":
@@ -238,7 +181,7 @@ def menu_stock(list_stocks=False):
     footer = None
     if list_stocks is True:
         text = ""
-        elements = stock.getStockAll()
+        elements = stock.getAll()
         for element in elements:
             text += stock.Stock(element).getAsString() + "\n"
         if text != "":
@@ -278,7 +221,7 @@ def menu_currency(list_currencies=False):
     footer = None
     if list_currencies is True:
         text = ""
-        elements = currency.getCurrencyAll()
+        elements = currency.getAll()
         for element in elements:
             text += currency.Currency(element).getAsString() + "\n"
         if text != "":

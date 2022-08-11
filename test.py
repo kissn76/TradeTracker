@@ -40,9 +40,12 @@ def main():
     # for element in elements:
     #     currency.Currency(element).print()
 
-    elements = stock.getStockAll()
-    for element in elements:
-        stock.Stock(element).print()
+    # elements = stock.getStockAll()
+    # for element in elements:
+    #     stock.Stock(element).print()
+
+    elements = db.provider_select_by_code("asas")
+    print(len(elements), elements)
 
 
 if __name__ == '__main__':

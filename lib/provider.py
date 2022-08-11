@@ -6,7 +6,7 @@ class Provider:
         self.id = None
         self.code = None
         self.name = None
-        self.error = []
+        self.error = {}
 
         if id is not None:
             self.load_by_id(id)
@@ -62,10 +62,16 @@ class Provider:
         print(self.getAsString())
 
 
-def getProviderAll():
+def getAll():
     objects = {}
     elements = db.provider_select_all()
     for element in elements:
         obj = Provider(element[0])
         objects.update({obj.getId(): obj})
     return objects
+
+
+def printAll():
+    objects = getAll()
+    for obj in objects:
+        obj.print()

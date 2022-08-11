@@ -6,7 +6,7 @@ class Stock:
         self.id = None
         self.code = None
         self.name = None
-        self.error = []
+        self.error = {}
 
         if id is not None:
             self.load_by_id(id)
@@ -62,10 +62,16 @@ class Stock:
         print(self.getAsString())
 
 
-def getStockAll():
+def getAll():
     objects = {}
     elements = db.stock_select_all()
     for element in elements:
         obj = Stock(element[0])
         objects.update({obj.getId(): obj})
     return objects
+
+
+def printAll():
+    objects = getAll()
+    for obj in objects:
+        obj.print()
