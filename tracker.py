@@ -374,25 +374,75 @@ def main():
     parser = argparse.ArgumentParser(description='TradeTracker command line interface')
     subparser = parser.add_subparsers(dest='subcommand', title='subcommands')
 
-    buy_parser = subparser.add_parser('buy', description='Buy a batch', help='Buy a batch')
-    sell_parser = subparser.add_parser('sell', description='Sell a batch', help='Sell a batch')
-    list_parser = subparser.add_parser('list', description='Batch list', help='Batch list')
+    provider_parser = subparser.add_parser('provider', description='Provider control', help='Provider control')
+    currency_parser = subparser.add_parser('currency', description='Currency control', help='Currency control')
+    stock_parser = subparser.add_parser('stock', description='Stock control', help='Stock control')
+    buy_parser = subparser.add_parser('buy', description='Buy new batch', help='Buy new batch')
+    sell_parser = subparser.add_parser('sell', description='Sell from batch', help='Sell from batch')
+    list_parser = subparser.add_parser('list', description='List batches', help='List batches')
 
-    buy_parser.add_argument('-p', '--provider', help='Provider id of the transaction')
-    buy_parser.add_argument('-s', '--stock', help='Stock id')
-    buy_parser.add_argument('-d', '--datetime', help='Date and time of the transaction')
-    buy_parser.add_argument('-r', '--price', help='Price of the transaction')
-    buy_parser.add_argument('-c', '--currency', help='Currency id of the price')
-    buy_parser.add_argument('-a', '--amount', help='Amount of the transaction')
-    buy_parser.add_argument('-n', '--note', help='Note of the transaction')
+    provider_subparser = provider_parser.add_subparsers(dest="subcommand2nd")
+    provider_add = provider_subparser.add_parser('add', help='Add new provider')
+    provider_list = provider_subparser.add_parser('list', help='List providers')
+    provider_delete = provider_subparser.add_parser('delete', help='Delete a provider')
+    provider_modify = provider_subparser.add_parser('modify', help='Modify a provider')
 
-    sell_parser.add_argument('-b', '--batch', help='Batch id of the transaction')
-    sell_parser.add_argument('-d', '--datetime', help='Date and time of the transaction')
-    sell_parser.add_argument('-r', '--price', help='Price of the transaction')
-    sell_parser.add_argument('-a', '--amount', help='Amount of the transaction')
-    sell_parser.add_argument('-n', '--note', help='Note of the transaction')
+    provider_add.add_argument('code', help='Provider code')
+    provider_add.add_argument('name', help='Provider name')
+
+    provider_delete_group = provider_delete.add_mutually_exclusive_group(required=True)
+    provider_delete_group.add_argument("-bi", "--byid", help="Delete by id")
+    provider_delete_group.add_argument("-bc", "--bycode", help="Delete by code")
+
+    provider_modify_group = provider_modify.add_mutually_exclusive_group(required=True)
+    provider_modify_group.add_argument("-bi", "--byid", help="Modify by id")
+    provider_modify_group.add_argument("-bc", "--bycode", help="Modify by code")
+    provider_modify.add_argument("-c", "--code", nargs=1, metavar=('new_code'), help="New code")
+    provider_modify.add_argument("-n", "--name", nargs=1, metavar=('new_name'), help="New name")
+
+    currency_subparser = currency_parser.add_subparsers(dest="subcommand2nd")
+    currency_add = currency_subparser.add_parser('add', help='Add new currency')
+    currency_list = currency_subparser.add_parser('list', help='List currencies')
+    currency_delete = currency_subparser.add_parser('delete', help='Delete a currency')
+    currency_modify = currency_subparser.add_parser('modify', help='Modify a currency')
+
+    currency_add.add_argument('-c', '--code', help='Currency code')
+    currency_add.add_argument('-n', '--name', help='Currency name')
+    currency_add.add_argument('-s', '--symbol', help='Currency symbol')
+
+    stock_subparser = stock_parser.add_subparsers(dest="subcommand2nd")
+    stock_add = stock_subparser.add_parser('add', help='Add new stock')
+    stock_list = stock_subparser.add_parser('list', help='List stock')
+    stock_delete = stock_subparser.add_parser('delete', help='Delete a stock')
+    stock_modify = stock_subparser.add_parser('modify', help='Modify a stock')
+
+    stock_add.add_argument('-c', '--code', help='Stock code')
+    stock_add.add_argument('-n', '--name', help='Stock name')
+
+    # provider_subcommands = provider_parser.add_mutually_exclusive_group(required=True)
+    # provider_subcommands.add_argument('-a', '--add', action='store_true')
+    # provider_subcommands.add_argument('-l', '--list', action='store_true')
+    # provider_subcommands.add_argument('-d', '--delete', action='store_true')
+    # provider_subcommands.add_argument('-m', '--modify', action='store_true')
+
+    # buy_parser.add_argument('-p', '--provider', help='Provider id of the transaction')
+    # buy_parser.add_argument('-s', '--stock', help='Stock id')
+    # buy_parser.add_argument('-d', '--datetime', help='Date and time of the transaction')
+    # buy_parser.add_argument('-r', '--price', help='Price of the transaction')
+    # buy_parser.add_argument('-c', '--currency', help='Currency id of the price')
+    # buy_parser.add_argument('-a', '--amount', help='Amount of the transaction')
+    # buy_parser.add_argument('-n', '--note', help='Note of the transaction')
+
+    # sell_parser.add_argument('-b', '--batch', help='Batch id of the transaction')
+    # sell_parser.add_argument('-d', '--datetime', help='Date and time of the transaction')
+    # sell_parser.add_argument('-r', '--price', help='Price of the transaction')
+    # sell_parser.add_argument('-a', '--amount', help='Amount of the transaction')
+    # sell_parser.add_argument('-n', '--note', help='Note of the transaction')
 
     args = parser.parse_args()
+
+    print(args)
+    exit()
 
     if args.subcommand == "buy":
         print("Buy a new batch")
@@ -403,33 +453,6 @@ def main():
         print("List existing batches")
     elif args.subcommand is None:
         menu_loop()
-        # menu_options = {
-        #     1: 'Buy',
-        #     2: 'Sell',
-        #     3: 'List',
-        #     0: 'Exit'
-        # }
-        # while(True):
-        #     for key in menu_options.keys():
-        #         print (key, '--', menu_options[key] )
-        #     option = ''
-        #     try:
-        #         option = int(input('Enter your choice: '))
-        #     except:
-        #         print('Wrong input. Please enter a number ...')
-        #     #Check what choice was entered and act accordingly
-        #     if option == 0:
-        #         print('Thanks message before exiting')
-        #         exit(0)
-        #     elif option == 1:
-        #         print('Buy a new batch')
-        #         buy(None)
-        #     elif option == 2:
-        #         print('Handle option \'Option 2\'')
-        #     elif option == 3:
-        #         print('Handle option \'Option 3\'')
-        #     else:
-        #         print('Invalid option. Please enter a number between 1 and 4.')
     else:
         print("Subcommand error")
         exit(0)
