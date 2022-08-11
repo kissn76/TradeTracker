@@ -1,7 +1,7 @@
 import os
 import argparse
 from datetime import datetime
-from lib import provider, stock, currency
+from lib import provider, stock, currency, batch
 from lib import db_sqlite as db
 
 
@@ -9,72 +9,88 @@ def cls():
     os.system('cls' if os.name=='nt' else 'clear')
 
 
+def provider_start(args):
+    if args.subcommand2nd == "list":
+        elements = provider.getProviderAll()
+        for element in elements:
+            provider.Provider(element).print()
+    elif args.subcommand2nd == "add":
+        code = args.code
+        name = args.name
+        obj = provider.Provider(None, code, name)
+        if obj.getId() is not None:
+            obj.print()
+        else:
+            print("Create error")
+    else:
+        print("Subcommand error")
+        exit(0)
+
+
+def currency_start(args):
+    if args.subcommand2nd == "list":
+        elements = currency.getCurrencyAll()
+        for element in elements:
+            currency.Currency(element).print()
+    elif args.subcommand2nd == "add":
+        code = args.code
+        name = args.name
+        symbol = args.symbol
+        obj = currency.Currency(None, code, name, symbol)
+        if obj.getId() is not None:
+            obj.print()
+        else:
+            print("Create error")
+    else:
+        print("Subcommand error")
+        exit(0)
+
+
+def stock_start(args):
+    if args.subcommand2nd == "list":
+        elements = stock.getStockAll()
+        for element in elements:
+            stock.Stock(element).print()
+    elif args.subcommand2nd == "add":
+        code = args.code
+        name = args.name
+        obj = stock.Stock(None, code, name)
+        if obj.getId() is not None:
+            obj.print()
+        else:
+            print("Create error")
+    else:
+        print("Subcommand error")
+        exit(0)
+
+
 def buy(args):
-    providerId = None
+    providerId = args.provider
     providerObj = None
-    stockId = None
+    stockId = args.stock
     stockObj = None
-    dt = None
-    price = None
-    priceCurrencyId = None
+    dt = args.datetime
+    price = args.price
+    priceCurrencyId = args.currency
     currencyObj = None
-    amount = None
-    note = None
-
-    try:
-        providerId = args.provider
-    except AttributeError:
-        providerId = None
-
-    try:
-        stockId = args.stock
-    except AttributeError:
-        stockId = None
-
-    try:
-        dt = args.datetime
-    except AttributeError:
-        dt = None
-
-    try:
-        price = args.price
-    except AttributeError:
-        price = None
-
-    try:
-        priceCurrencyId = args.currency
-    except AttributeError:
-        priceCurrencyId = None
-
-    try:
-        amount = args.amount
-    except AttributeError:
-        amount = None
-
-    try:
-        note = args.note
-    except AttributeError:
-        note = None
+    amount = args.amount
+    note = args.note
 
     providerObj = provider.Provider(providerId)
-    while providerObj.getId() is None:
+    if providerObj.getId() is None:
         print(f"Provider id is not exists: {providerId}")
         all_provider = db.provider_select_all()
         if all_provider is not None:
             print(all_provider)
-        providerId = input("Type provider id: ")
-        providerObj = provider.Provider(providerId)
-    print(f"Provider: {providerObj.getAsString()}")
+        exit()
 
     stockObj = stock.Stock(stockId)
-    while stockObj.getId() is None:
+    if stockObj.getId() is None:
         print(f"Stock id is not exists: {stockId}")
         all_stocks = db.stock_select_all()
         if all_stocks is not None:
             print(all_stocks)
-        stockId = input("Type stock id: ")
-        stockObj = stock.Stock(stockId)
-    print(f"Stock: {stockObj.getAsString()}")
+        exit()
 
     dtt = None
     try:
@@ -83,98 +99,47 @@ def buy(args):
         dtt = None
     else:
         dt = dtt
-    while dtt is None:
-        dt = input(f'Type date and time of transaction (format: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}):')
-        try:
-            dtt = datetime.fromisoformat(dt)
-        except:
-            dtt = None
-        else:
-            dt = dtt
-    print(f"Date and time of transaction: {dt}")
+    if dtt is None:
+        print(f'Date and time error (format: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}):')
+        exit()
 
-    while price is None or price.replace('.','',1).isdigit() is False:
+    price = price.replace(',', '.')
+    if price is None or price.replace('.','',1).isdigit() is False:
         print(f"Price error: {price}")
-        price = input("Type the price of transaction: ")
-    print(f"Price of transaction: {price}")
+        exit()
 
     currencyObj = currency.Currency(priceCurrencyId)
-    while currencyObj.getId() is None:
+    if currencyObj.getId() is None:
         print(f"Currency id is not exists: {priceCurrencyId}")
         all_currencies = db.currency_select_all()
         if all_currencies is not None:
             print(all_currencies)
-        priceCurrencyId = input("Type currency id: ")
-        currencyObj = currency.Currency(priceCurrencyId)
-    print(f"Currency: {currencyObj.getAsString()}")
+        exit()
 
-    while amount is None or amount.replace('.','',1).isdigit() is False:
+    amount = amount.replace(',', '.')
+    if amount is None or amount.replace('.','',1).isdigit() is False:
         print(f"Amount error: {amount}")
-        amount = input("Type amount of transaction: ")
-    print(f"Amount of transaction: {amount}")
+        exit()
 
-    if note is None:
-        note = ""
+    # if note is None:
+    #     note = ""
 
     print(f"Provider: {providerObj.getName()}")
     print(f"Stock: {stockObj.getName()}")
     batch_unit_price = float(price) / float(amount)
     print(f"{'Date':<19}|{'Price':>16}|{'Amount':>16}|{'Unit price':>16}|{'Note':^35}")
     print(f"{'':-^100}")
-    print(f"{dt}|{(price + ' ' + currencyObj.getSymbol()):>16}|{amount:>16}|{batch_unit_price:16,.2f}|{note}")
+    price = f"{float(price):,.2f}" + " " + f"{currencyObj.getSymbol()}"
+    print(f"{dt}|{price:>16}|{float(amount):16,.2f}|{batch_unit_price:16,.2f}|{note}".replace(',', ' '))
 
-    menu_options = {
-            1: 'Provider',
-            2: 'Stock',
-            3: 'Date',
-            4: 'Price',
-            5: 'Currency',
-            6: 'Amount',
-            7: 'Note'
-        }
+    batch.Batch(None, providerId, stockId, dt, price, priceCurrencyId, amount, note)
 
-    while(True):
-        for key in menu_options.keys():
-            print (key, '--', menu_options[key] )
-        option = ''
-        try:
-            option = int(input('Enter your choice: '))
-        except:
-            print('Wrong input. Please enter a number ...')
-        #Check what choice was entered and act accordingly
-        if option == 1:
-            providerIdNew = None
-            providerObjNew = provider.Provider(providerIdNew)
-            while providerObjNew.getId() is None:
-                all_provider = db.provider_select_all()
-                if all_provider is not None:
-                    print(all_provider)
-                providerIdNew = input("Type provider id: ")
-                providerObjNew = provider.Provider(providerIdNew)
-                if providerIdNew == "":
-                    providerIdNew = providerId
-                    providerObjNew = providerObj
-            providerId = providerIdNew
-            providerObj = providerObjNew
-        elif option == 2:
-            print('Handle option \'Option 2\'')
-        elif option == 3:
-            print('Handle option \'Option 3\'')
-        elif option == 4:
-            print('Thanks message before exiting')
-            exit(0)
-        else:
-            print('Invalid option. Please enter a number between 1 and 4.')
 
-        if note is None:
-            note = ""
-
-        print(f"Provider: {providerObj.getName()}")
-        print(f"Stock: {stockObj.getName()}")
-        batch_unit_price = float(price) / float(amount)
-        print(f"{'Date':<19}|{'Price':>16}|{'Amount':>16}|{'Unit price':>16}|{'Note':^35}")
-        print(f"{'':-^100}")
-        print(f"{dt}|{(price + ' ' + currencyObj.getSymbol()):>16}|{amount:>16}|{batch_unit_price:16,.2f}|{note}")
+def list_batches(args):
+    print(args)
+    elements = batch.getBachesAll()
+    for element in elements:
+        stock.Stock(element).print()
 
 
 def menu_loop():
@@ -384,54 +349,48 @@ def main():
     provider_subparser = provider_parser.add_subparsers(dest="subcommand2nd")
     provider_add = provider_subparser.add_parser('add', help='Add new provider')
     provider_list = provider_subparser.add_parser('list', help='List providers')
-    provider_delete = provider_subparser.add_parser('delete', help='Delete a provider')
-    provider_modify = provider_subparser.add_parser('modify', help='Modify a provider')
+    # provider_delete = provider_subparser.add_parser('delete', help='Delete a provider')
+    # provider_modify = provider_subparser.add_parser('modify', help='Modify a provider')
 
     provider_add.add_argument('code', help='Provider code')
     provider_add.add_argument('name', help='Provider name')
 
-    provider_delete_group = provider_delete.add_mutually_exclusive_group(required=True)
-    provider_delete_group.add_argument("-bi", "--byid", help="Delete by id")
-    provider_delete_group.add_argument("-bc", "--bycode", help="Delete by code")
+    # provider_delete_group = provider_delete.add_mutually_exclusive_group(required=True)
+    # provider_delete_group.add_argument("-bi", "--byid", help="Delete by id")
+    # provider_delete_group.add_argument("-bc", "--bycode", help="Delete by code")
 
-    provider_modify_group = provider_modify.add_mutually_exclusive_group(required=True)
-    provider_modify_group.add_argument("-bi", "--byid", help="Modify by id")
-    provider_modify_group.add_argument("-bc", "--bycode", help="Modify by code")
-    provider_modify.add_argument("-c", "--code", nargs=1, metavar=('new_code'), help="New code")
-    provider_modify.add_argument("-n", "--name", nargs=1, metavar=('new_name'), help="New name")
+    # provider_modify_group = provider_modify.add_mutually_exclusive_group(required=True)
+    # provider_modify_group.add_argument("-bi", "--byid", help="Modify by id")
+    # provider_modify_group.add_argument("-bc", "--bycode", help="Modify by code")
+    # provider_modify.add_argument("-c", "--code", nargs=1, metavar=('new_code'), help="New code")
+    # provider_modify.add_argument("-n", "--name", nargs=1, metavar=('new_name'), help="New name")
 
     currency_subparser = currency_parser.add_subparsers(dest="subcommand2nd")
     currency_add = currency_subparser.add_parser('add', help='Add new currency')
     currency_list = currency_subparser.add_parser('list', help='List currencies')
-    currency_delete = currency_subparser.add_parser('delete', help='Delete a currency')
-    currency_modify = currency_subparser.add_parser('modify', help='Modify a currency')
+    # currency_delete = currency_subparser.add_parser('delete', help='Delete a currency')
+    # currency_modify = currency_subparser.add_parser('modify', help='Modify a currency')
 
-    currency_add.add_argument('-c', '--code', help='Currency code')
-    currency_add.add_argument('-n', '--name', help='Currency name')
-    currency_add.add_argument('-s', '--symbol', help='Currency symbol')
+    currency_add.add_argument('code', help='Currency code')
+    currency_add.add_argument('name', help='Currency name')
+    currency_add.add_argument('symbol', help='Currency symbol')
 
     stock_subparser = stock_parser.add_subparsers(dest="subcommand2nd")
     stock_add = stock_subparser.add_parser('add', help='Add new stock')
     stock_list = stock_subparser.add_parser('list', help='List stock')
-    stock_delete = stock_subparser.add_parser('delete', help='Delete a stock')
-    stock_modify = stock_subparser.add_parser('modify', help='Modify a stock')
+    # stock_delete = stock_subparser.add_parser('delete', help='Delete a stock')
+    # stock_modify = stock_subparser.add_parser('modify', help='Modify a stock')
 
-    stock_add.add_argument('-c', '--code', help='Stock code')
-    stock_add.add_argument('-n', '--name', help='Stock name')
+    stock_add.add_argument('code', help='Stock code')
+    stock_add.add_argument('name', help='Stock name')
 
-    # provider_subcommands = provider_parser.add_mutually_exclusive_group(required=True)
-    # provider_subcommands.add_argument('-a', '--add', action='store_true')
-    # provider_subcommands.add_argument('-l', '--list', action='store_true')
-    # provider_subcommands.add_argument('-d', '--delete', action='store_true')
-    # provider_subcommands.add_argument('-m', '--modify', action='store_true')
-
-    # buy_parser.add_argument('-p', '--provider', help='Provider id of the transaction')
-    # buy_parser.add_argument('-s', '--stock', help='Stock id')
-    # buy_parser.add_argument('-d', '--datetime', help='Date and time of the transaction')
-    # buy_parser.add_argument('-r', '--price', help='Price of the transaction')
-    # buy_parser.add_argument('-c', '--currency', help='Currency id of the price')
-    # buy_parser.add_argument('-a', '--amount', help='Amount of the transaction')
-    # buy_parser.add_argument('-n', '--note', help='Note of the transaction')
+    buy_parser.add_argument('provider', help='Provider id of the transaction')
+    buy_parser.add_argument('stock', help='Stock id')
+    buy_parser.add_argument('datetime', help='Date and time of the transaction')
+    buy_parser.add_argument('price', help='Price of the transaction')
+    buy_parser.add_argument('currency', help='Currency id of the price')
+    buy_parser.add_argument('amount', help='Amount of the transaction')
+    buy_parser.add_argument('-n', '--note', help='Note of the transaction')
 
     # sell_parser.add_argument('-b', '--batch', help='Batch id of the transaction')
     # sell_parser.add_argument('-d', '--datetime', help='Date and time of the transaction')
@@ -441,16 +400,21 @@ def main():
 
     args = parser.parse_args()
 
-    print(args)
-    exit()
+    # print(args)
+    # exit()
 
-    if args.subcommand == "buy":
-        print("Buy a new batch")
+    if args.subcommand == "provider":
+        provider_start(args)
+    elif args.subcommand == "currency":
+        currency_start(args)
+    elif args.subcommand == "stock":
+        stock_start(args)
+    elif args.subcommand == "buy":
         buy(args)
     elif args.subcommand == "sell":
         print("Sell from existing batch")
     elif args.subcommand == "list":
-        print("List existing batches")
+        list_batches(args)
     elif args.subcommand is None:
         menu_loop()
     else:

@@ -75,6 +75,10 @@ class Batch:
         self.load_sales()
 
 
+    def getId(self):
+        return self.id
+
+
     def getProvider(self):
         return self.provider
 
@@ -144,12 +148,10 @@ class Batch:
         print(f"{'':54}{balance:16,.2f}{profit:68,.2f} {self.priceCurrency.getSymbol()}".replace(",", " "))
 
 
-def getBaches():
-    baches = db.batch_select_id_all()
-    ret = []
-
-    for bach in baches:
-        tmp = Batch(bach[0])
-        ret.append(tmp)
-
-    return ret
+def getBachesAll():
+    objects = {}
+    elements = db.batch_select_all()
+    for element in elements:
+        obj = Batch(element[0])
+        objects.update({obj.getId(): obj})
+    return objects
