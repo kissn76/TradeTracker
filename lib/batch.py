@@ -179,6 +179,7 @@ def getByStock(stockId):
 
 
 def printStock(stockId):
+    stockObj = stock.Stock(stockId)
     objects = getByStock(stockId)
     transactions = []
     for obj in objects:
@@ -187,7 +188,9 @@ def printStock(stockId):
         price = obj.getPrice()
         currency = obj.getPriceCurrency()
         dateAndTime = obj.getDatetime()
-        transactionBuy = [dateAndTime, price, currency.getCode(), amount]
+        note = obj.getNote()
+        buy_unit_price = price / amount
+        transactionBuy = [dateAndTime, price, currency.getCode(), amount, note, None]
         transactions.append(transactionBuy)
 
         sales = obj.getSales()
@@ -196,11 +199,36 @@ def printStock(stockId):
                 amount = saleObj.getAmount()
                 price = saleObj.getPrice()
                 dateAndTime = saleObj.getDatetime()
-                transactionSell = [dateAndTime, price, currency.getCode(), (amount * -1)]
+                note = saleObj.getNote()
+                transactionSell = [dateAndTime, price, currency.getCode(), (amount * -1), note, buy_unit_price]
                 transactions.append(transactionSell)
 
     transactionsSorted = sorted(transactions, key=lambda x: (dtup.parse(x[0]), -x[3]))
     balance = 0
+    profit = 0
+    print(f"Stock: {stockObj.getAsString()}")
+    print(f"{'Date':<19}|{'Price':>16}|{'Amount':>16}|{'Balance':>16}|{'Unit price':>16}|{'Note':^35}")
+    print(f"{'':=^170}")
     for tr in transactionsSorted:
-        balance += tr[3]
-        print(tr, balance)
+        date = tr[0]
+        price = tr[1]
+        currency = tr[2]
+        amount = tr[3]
+        note = tr[4]
+        buy_unit_price = tr[5]
+        buy_price = 0.0
+        line_profit = 0.0
+        if buy_unit_price is not None:
+            buy_price = buy_unit_price * amount
+            line_profit = buy_price - price
+            profit += line_profit
+        if note is None:
+            note = ""
+        balance += amount
+        price_string = f"{price:,.2f} {currency}".replace(",", " ")
+        amount_string = f"{amount:,.2f}".replace(",", " ")
+        unit_price_string = f"{(price / amount):,.2f}".replace(",", " ")
+        print(f"{date:19}|{price_string:>16}|{amount_string:>16}|{balance:16,.2f}|{unit_price_string:>16}|{line_profit:16,.2f}|{profit:16,.2f}|{note:>35}")
+    print(f"{'':=^170}")
+    balance_string = f"{balance:,.2f}".replace(",", " ")
+    print(f"{'':54}{balance_string:>16}")
