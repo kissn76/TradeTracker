@@ -13,3 +13,12 @@ def create_base():
     currency.Currency(None, "EUR", "Euro", "€")
     stock.Stock(None, "USD", "United States dollar")
     stock.Stock(None, "EUR", "Euro")
+
+
+def main():
+    setup.create_tables()
+    setup.create_base()
+
+
+if __name__ == '__main__':
+    main()

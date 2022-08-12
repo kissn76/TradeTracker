@@ -21,16 +21,17 @@ def test_data():
     b4.sell("2022-07-28", 0, 16.82, "Költség és jutalék")
     b5.sell("2022-07-28", 302837, 760, None)
 
-    b1.print()
-    b2.print()
-    b3.print()
-    b4.print()
-    b5.print()
+    # b1.print()
+    # b2.print()
+    # b3.print()
+    # b4.print()
+    # b5.print()
 
 
 def main():
     # setup.create_tables()
     # setup.create_base()
+    # test_data()
 
     # elements = provider.getProviderAll()
     # for element in elements:
@@ -44,8 +45,11 @@ def main():
     # for element in elements:
     #     stock.Stock(element).print()
 
-    elements = db.provider_select_by_code("asas")
-    print(len(elements), elements)
+    # elements = batch.getAll()
+    # for element in elements:
+    #     batch.Batch(element).print()
+
+    batch.printStock(1)
 
 
 if __name__ == '__main__':

@@ -270,7 +270,7 @@ def batch_insert(providerId, stockId, datetime, price, priceCurrencyId, amount, 
     return ret
 
 
-def batch_validate(providerId, stockId, datetime, price, priceCurrencyId, amount, note):
+def batch_validate(providerId, stockId, dateAndTime, price, priceCurrencyId, amount, note):
     error_messages = {}
     provider_errors = []
     stock_errors = []
@@ -287,38 +287,38 @@ def batch_validate(providerId, stockId, datetime, price, priceCurrencyId, amount
     if len(stock) == 0:
         stock_errors.append("Value is not exists")
 
-    if datetime is None:
+    if dateAndTime is None:
         datetime_errors.append("Value is None")
-    if datetime == "":
+    if dateAndTime == "":
         datetime_errors.append("Value is empty")
     dtt = None
     try:
-        dtt = datetime.fromisoformat(datetime)
+        dtt = datetime.fromisoformat(dateAndTime)
     except:
         dtt = None
     else:
-        datetime = dtt
+        dateAndTime = dtt
     if dtt is None:
         datetime_errors.append(f'Date and time error (format: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")})')
 
-    price = price.replace(',', '.')
+    price = float(str(price).replace(',', '.'))
     if price is None:
         price_errors.append("Value is None")
     if price == "":
         price_errors.append("Value is empty")
-    if price.replace('.','',1).isdigit() is False:
+    if str(price).replace('.','',1).isdigit() is False:
         price_errors.append("Value is not a number")
 
     currency = currency_select_by_id(priceCurrencyId)
     if len(currency) == 0:
         priceCurrency_errors.append("Value is not exists")
 
-    amount = amount.replace(',', '.')
+    amount = float(str(amount).replace(',', '.'))
     if amount is None:
         amount_errors.append("Value is None")
     if amount == "":
         amount_errors.append("Value is empty")
-    if amount.replace('.','',1).isdigit() is False:
+    if str(amount).replace('.','',1).isdigit() is False:
         amount_errors.append("Value is not a number")
 
     if len(provider_errors) > 0:
@@ -349,6 +349,11 @@ def batch_select_id_all():
 
 def batch_select_by_id(id):
     ret = data_select("batches", {"id": id})
+    return ret
+
+
+def batch_select_by_stockId(stockId):
+    ret = data_select("batches", {"stockId": stockId})
     return ret
 
 

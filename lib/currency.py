@@ -79,5 +79,5 @@ def getAll():
 
 def printAll():
     objects = getAll()
-    for obj in objects:
-        obj.print()
+    for objId in objects:
+        objects[objId].print()

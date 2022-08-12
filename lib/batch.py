@@ -1,5 +1,6 @@
 from . import db_sqlite as db
 from . import provider, stock, sale, currency
+import dateutil.parser as dtup
 
 
 class Batch:
@@ -54,9 +55,9 @@ class Batch:
         self.providerId = providerId
         self.stockId = stockId
         self.datetime = datetime
-        self.price = price
+        self.price = float(str(price).replace(',', '.'))
         self.priceCurrencyId = priceCurrencyId
-        self.amount = amount
+        self.amount = float(str(amount).replace(',', '.'))
         self.note = note
         self.balance = self.amount
 
@@ -154,7 +155,9 @@ class Batch:
             print(f"{s.getDatetime():19}|{s.getPrice():16,.2f}|{(s.getAmount() * -1):16,.2f}|{balance:16,.2f}|{sale_unit_price:16,.2f}|{unit_profit:16,.2f}|{sale_profit:16,.2f}|{profit:16,.2f}|{note:>35}".replace(",", " "))
 
         print(f"{'':=^170}")
-        print(f"{'':54}{balance:16,.2f}{profit:68,.2f} {self.priceCurrency.getSymbol()}".replace(",", " "))
+        balance_string = f"{balance:,.2f}".replace(",", " ")
+        profit_string = f"{profit:,.2f} {self.priceCurrency.getSymbol()}".replace(",", " ")
+        print(f"{'':54}{balance_string:>16}{profit_string:>68}")
 
 
 def getAll():
@@ -164,3 +167,40 @@ def getAll():
         obj = Batch(element[0])
         objects.update({obj.getId(): obj})
     return objects
+
+
+def getByStock(stockId):
+    objects = {}
+    elements = db.batch_select_by_stockId(stockId)
+    for element in elements:
+        obj = Batch(element[0])
+        objects.update({obj.getId(): obj})
+    return objects
+
+
+def printStock(stockId):
+    objects = getByStock(stockId)
+    transactions = []
+    for obj in objects:
+        obj = Batch(obj)
+        amount = obj.getAmount()
+        price = obj.getPrice()
+        currency = obj.getPriceCurrency()
+        dateAndTime = obj.getDatetime()
+        transactionBuy = [dateAndTime, price, currency.getCode(), amount]
+        transactions.append(transactionBuy)
+
+        sales = obj.getSales()
+        for saleObj in sales:
+            if saleObj.getId() is not None:
+                amount = saleObj.getAmount()
+                price = saleObj.getPrice()
+                dateAndTime = saleObj.getDatetime()
+                transactionSell = [dateAndTime, price, currency.getCode(), (amount * -1)]
+                transactions.append(transactionSell)
+
+    transactionsSorted = sorted(transactions, key=lambda x: (dtup.parse(x[0]), -x[3]))
+    balance = 0
+    for tr in transactionsSorted:
+        balance += tr[3]
+        print(tr, balance)

@@ -1,8 +1,8 @@
-from lib import batch, sale
-
+import setup
 
 def main():
-    pass
+    setup.create_tables()
+    setup.create_base()
 
 
 if __name__ == '__main__':

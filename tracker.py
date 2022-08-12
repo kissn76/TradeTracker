@@ -79,10 +79,9 @@ def buy(args):
 
 
 def list_batches(args):
-    print(args)
     elements = batch.getAll()
     for element in elements:
-        stock.Stock(element).print()
+        batch.Batch(element).print()
 
 
 def menu_loop():
@@ -120,7 +119,7 @@ def menu_main():
         3: "Currency",
         0: "Exit program"
     }
-    option = get_menu_option(head, menu_options)
+    option = print_menu_option(head, menu_options)
     if option == 0:
         return "program_exit"
     elif option == 1:
@@ -146,7 +145,7 @@ def menu_provider(list_providers=False):
             text += provider.Provider(element).getAsString() + "\n"
         if text != "":
             footer = text[:-1]
-    option = get_menu_option(head, menu_options, footer=footer)
+    option = print_menu_option(head, menu_options, footer=footer)
     if option == 0:
         return "menu_main"
     elif option == 1:
@@ -186,7 +185,7 @@ def menu_stock(list_stocks=False):
             text += stock.Stock(element).getAsString() + "\n"
         if text != "":
             footer = text[:-1]
-    option = get_menu_option(head, menu_options, footer=footer)
+    option = print_menu_option(head, menu_options, footer=footer)
     if option == 0:
         return "menu_main"
     elif option == 1:
@@ -226,7 +225,7 @@ def menu_currency(list_currencies=False):
             text += currency.Currency(element).getAsString() + "\n"
         if text != "":
             footer = text[:-1]
-    option = get_menu_option(head, menu_options, footer=footer)
+    option = print_menu_option(head, menu_options, footer=footer)
     if option == 0:
         return "menu_main"
     elif option == 1:
@@ -253,7 +252,7 @@ def menu_currency_new():
     return "menu_currency"
 
 
-def get_menu_option(head, menu_options, footer=None):
+def print_menu_option(head, menu_options, footer=None):
     cls()
     if head is not None:
         print(head)

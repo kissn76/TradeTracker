@@ -28,8 +28,9 @@ class Sale:
 
     def load_by_id(self, id):
         p = db.sale_select_by_id(id)
-        self.id = p[0][0]
-        self.setClass(p[0][1], p[0][2], p[0][3], p[0][4], p[0][5])
+        if len(p) > 0:
+            self.id = p[0][0]
+            self.setClass(p[0][1], p[0][2], p[0][3], p[0][4], p[0][5])
 
 
     def setClass(self, datetime, batchId, price, amount, note):
