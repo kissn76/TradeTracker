@@ -46,9 +46,10 @@ class Batch:
 
     def load_by_id(self, id):
         p = db.batch_select_by_id(id)
-        self.id = p[0][0]
-        self.setClass(p[0][1], p[0][2], p[0][3], p[0][4], p[0][5], p[0][6], p[0][7])
-        self.setObjects()
+        if len(p) > 0:
+            self.id = p[0][0]
+            self.setClass(p[0][1], p[0][2], p[0][3], p[0][4], p[0][5], p[0][6], p[0][7])
+            self.setObjects()
 
 
     def setClass(self, providerId, stockId, datetime, price, priceCurrencyId, amount, note=None):

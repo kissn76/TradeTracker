@@ -76,15 +76,17 @@ def create_tables():
     create_table(sql_create_table_sales)
 
 
-def data_insert(table, values):
-    sql = "INSERT INTO {}({}) VALUES({})".format(table, ','.join(tuple(values.keys())), ','.join(['?'] * len(values)))
+def data_insert(table, **values):
+    columnNames = ', '.join(values.keys())
+    columnValues = ', '.join(['?'] * len(values))
+    sql = f"INSERT INTO {table} ({columnNames}) VALUES ({columnValues})"
     ret = None
 
     conn = create_connection()
     if conn is not None:
         try:
             cur = conn.cursor()
-            cur.execute(sql, tuple(values.values()))
+            cur.execute(sql, values.values())
             conn.commit()
             ret = cur.lastrowid
         except Error as e:
@@ -96,17 +98,14 @@ def data_insert(table, values):
     return ret
 
 
-def data_select(table, values=None, fields=["*"]):
-    sql = None
+def data_select(table, fields=("*",), whereClause=None):
     ret = None
 
-    if values is None:
-        sql = "SELECT {} FROM {}".format(','.join(fields), table)
-    else:
-        where = []
-        for key, val in values.items():
-            where.append(str(key) + "='" + str(val) + "'")
-        sql = "SELECT {} FROM {} WHERE {}".format(','.join(fields), table, ' AND '.join(where))
+    selectFields = ','.join(fields)
+    sql = f"SELECT {selectFields} FROM {table}"
+
+    if bool(whereClause):
+        sql += f" WHERE {whereClause}"
 
     conn = create_connection()
     if conn is not None:
@@ -124,7 +123,7 @@ def data_select(table, values=None, fields=["*"]):
 
 
 def provider_insert(code, name):
-    ret = data_insert("providers", {"code": code, "name": name})
+    ret = data_insert("providers", code=code, name=name)
     return ret
 
 
@@ -159,17 +158,19 @@ def provider_select_all():
 
 
 def provider_select_by_id(id):
-    ret = data_select("providers", {"id": id})
+    whereClause = f"id={id}"
+    ret = data_select("providers", whereClause=whereClause)
     return ret
 
 
 def provider_select_by_code(code):
-    ret = data_select("providers", {"code": code})
+    whereClause = f"code={code}"
+    ret = data_select("providers", whereClause=whereClause)
     return ret
 
 
 def currency_insert(code, name, symbol):
-    ret = data_insert("currencies", {"code": code, "name": name, "symbol": symbol})
+    ret = data_insert("currencies", code=code, name=name, symbol=symbol)
     return ret
 
 
@@ -211,17 +212,19 @@ def currency_select_all():
 
 
 def currency_select_by_id(id):
-    ret = data_select("currencies", {"id": id})
+    whereClause = f"id={id}"
+    ret = data_select("currencies", whereClause=whereClause)
     return ret
 
 
 def currency_select_by_code(code):
-    ret = data_select("currencies", {"code": code})
+    whereClause = f"code={code}"
+    ret = data_select("currencies", whereClause=whereClause)
     return ret
 
 
 def stock_insert(code, name):
-    ret = data_insert("stocks", {"code": code, "name": name})
+    ret = data_insert("stocks", code=code, name=name)
     return ret
 
 
@@ -256,17 +259,19 @@ def stock_select_all():
 
 
 def stock_select_by_id(id):
-    ret = data_select("stocks", {"id": id})
+    whereClause = f"id={id}"
+    ret = data_select("stocks", whereClause=whereClause)
     return ret
 
 
 def stock_select_by_code(code):
-    ret = data_select("stocks", {"code": code})
+    whereClause = f"code={code}"
+    ret = data_select("stocks", whereClause=whereClause)
     return ret
 
 
 def batch_insert(providerId, stockId, datetime, price, priceCurrencyId, amount, note):
-    ret = data_insert("batches", {"providerId": providerId, "stockId": stockId, "datetime": datetime, "price": price, "priceCurrencyId": priceCurrencyId, "amount": amount, "note": note})
+    ret = data_insert("batches", providerId=providerId, stockId=stockId, datetime=datetime, price=price, priceCurrencyId=priceCurrencyId, amount=amount, note=note)
     return ret
 
 
@@ -343,22 +348,24 @@ def batch_select_all():
 
 
 def batch_select_id_all():
-    ret = data_select("batches", fields=["id"])
+    ret = data_select("batches", fields=("id",))
     return ret
 
 
 def batch_select_by_id(id):
-    ret = data_select("batches", {"id": id})
+    whereClause = f"id={id}"
+    ret = data_select("batches", whereClause=whereClause)
     return ret
 
 
 def batch_select_by_stockId(stockId):
-    ret = data_select("batches", {"stockId": stockId})
+    whereClause = f"stockId={stockId}"
+    ret = data_select("batches", whereClause=whereClause)
     return ret
 
 
 def sale_insert(datetime, batchId, price, amount, note):
-    ret = data_insert("sales", {"datetime": datetime, "batchId": batchId, "price": price, "amount": amount, "note": note})
+    ret = data_insert("sales", datetime=datetime, batchId=batchId, price=price, amount=amount, note=note)
     return ret
 
 
@@ -368,10 +375,12 @@ def sale_select_all():
 
 
 def sale_select_id_by_batchId(batchId):
-    ret = data_select("sales", {"batchId": batchId}, ["id"])
+    whereClause = f"batchId={batchId}"
+    ret = data_select("sales", fields=("id",), whereClause=whereClause)
     return ret
 
 
 def sale_select_by_id(id):
-    ret = data_select("sales", {"id": id})
+    whereClause = f"id={id}"
+    ret = data_select("sales", whereClause=whereClause)
     return ret

@@ -49,7 +49,10 @@ def main():
     # for element in elements:
     #     batch.Batch(element).print()
 
-    batch.printStock(1)
+    # batch.printStock(1)
+
+    print(db.batch_select_id_all())
+    # print(db.batch_select_all())
 
 
 if __name__ == '__main__':
