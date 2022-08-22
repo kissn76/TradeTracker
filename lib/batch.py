@@ -131,9 +131,7 @@ class Batch:
 
     def getAsString(self):
         ret = ""
-        note = ""
-        if self.note is not None:
-            note = self.note
+        note = self.note if bool(self.note) else ""
 
         ret += f"Batch ID: {str(self.id)}\n"
         ret += f"Provider: {self.provider.getAsString()}\n"
@@ -149,17 +147,15 @@ class Batch:
         ret += f"{'':<19}|{self.priceCurrency.getSymbol():>16}|{'':>16}|{'':>16}|{self.priceCurrency.getSymbol():>16}|{self.priceCurrency.getSymbol():>16}|{self.priceCurrency.getSymbol():>16}|{self.priceCurrency.getSymbol():>16}|{'Note':^35}\n"
         ret += f"{'':=^170}\n"
         ret += f"{self.datetime:19}|{self.price:16,.2f}|{self.amount:16,.2f}|{balance:16,.2f}|{batch_unit_price:16,.2f}|{'':16}|{'':16}|{'':16}|{note:>35}\n".replace(",", " ")
-        
+
         for s in self.sales:
-            note = ""
-            if s.getNote() is not None:
-                note = s.getNote()
+            note = s.getNote() if bool(s.getNote()) else ""
             balance -= s.getAmount()
             sale_unit_price = s.getPrice() / s.getAmount()
             unit_profit = sale_unit_price - batch_unit_price
             sale_profit = unit_profit * s.getAmount()
             profit += sale_profit
-            
+
             ret += f"{s.getDatetime():19}|{s.getPrice():16,.2f}|{(s.getAmount() * -1):16,.2f}|{balance:16,.2f}|{sale_unit_price:16,.2f}|{unit_profit:16,.2f}|{sale_profit:16,.2f}|{profit:16,.2f}|{note:>35}\n".replace(",", " ")
 
         balance_string = f"{balance:,.2f}".replace(",", " ")

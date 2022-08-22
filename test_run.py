@@ -39,9 +39,9 @@ def test_data():
 
 
 def main():
-    # setup.create_tables()
-    # setup.create_base()
-    # test_data()
+    setup.create_tables()
+    setup.create_base()
+    test_data()
 
     # elements = provider.getAll()
     # for element in elements:
@@ -60,7 +60,7 @@ def main():
     #     batch.Batch(element).print()
 
     # batch.printStock(1)
-    
+
     elements = batch.getByStockWithBalance(1)
     for element in elements:
         batch.Batch(element).print()

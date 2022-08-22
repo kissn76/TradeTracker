@@ -3,7 +3,7 @@ from sqlite3 import Error
 from datetime import datetime
 
 
-def create_connection(db_file="database.db"):
+def create_connection(db_file:str="database.db") -> sqlite3.Connection:
     conn = None
     base_path = "./data/"
     path = base_path + db_file
@@ -16,7 +16,7 @@ def create_connection(db_file="database.db"):
     return conn
 
 
-def create_table(create_table_sql):
+def create_table(create_table_sql:str):
     conn = create_connection()
     if conn is not None:
         try:
@@ -76,7 +76,7 @@ def create_tables():
     create_table(sql_create_table_sales)
 
 
-def data_insert(table, **values):
+def data_insert(table:str, **values) -> int:
     columnNames = ', '.join(values.keys())
     columnValues = ', '.join(['?'] * len(values))
     sql = f"INSERT INTO {table} ({columnNames}) VALUES ({columnValues})"
@@ -98,7 +98,7 @@ def data_insert(table, **values):
     return ret
 
 
-def data_select(table, fields=("*",), whereClause=None):
+def data_select(table:str, fields:tuple=("*",), whereClause:str=None) -> list:
     ret = None
 
     selectFields = ','.join(fields)
@@ -119,30 +119,25 @@ def data_select(table, fields=("*",), whereClause=None):
         print("Error! Cannot create the database connection.")
     conn.close()
 
-
     return ret
 
 
-def provider_insert(code, name):
+def provider_insert(code:str, name:str) -> int:
     ret = data_insert("providers", code=code, name=name)
     return ret
 
 
-def provider_validate(code, name):
+def provider_validate(code:str, name:str) -> list:
     error_messages = {}
     code_errors = []
     name_errors = []
 
-    if code is None:
-        code_errors.append("Value is None")
-    if code == "":
+    if bool(code) is False:
         code_errors.append("Value is empty")
     element = provider_select_by_code(code)
     if bool(element):
         code_errors.append("Value already exists, it must be unique")
-    if name is None:
-        name_errors.append("Value is None")
-    if name == "":
+    if bool(name) is False:
         name_errors.append("Value is empty")
 
     if bool(code_errors):
@@ -153,48 +148,42 @@ def provider_validate(code, name):
     return error_messages
 
 
-def provider_select_all():
+def provider_select_all() -> list:
     ret = data_select("providers")
     return ret
 
 
-def provider_select_by_id(id):
+def provider_select_by_id(id:int) -> list:
     whereClause = f"id={id}"
     ret = data_select("providers", whereClause=whereClause)
     return ret
 
 
-def provider_select_by_code(code):
+def provider_select_by_code(code:str) -> list:
     whereClause = f"code='{code}'"
     ret = data_select("providers", whereClause=whereClause)
     return ret
 
 
-def currency_insert(code, name, symbol):
+def currency_insert(code:str, name:str, symbol:str) -> int:
     ret = data_insert("currencies", code=code, name=name, symbol=symbol)
     return ret
 
 
-def currency_validate(code, name, symbol):
+def currency_validate(code:str, name:str, symbol:str) -> list:
     error_messages = {}
     code_errors = []
     name_errors = []
     symbol_errors = []
 
-    if code is None:
-        code_errors.append("Value is None")
-    if code == "":
+    if bool(code) is False:
         code_errors.append("Value is empty")
     element = currency_select_by_code(code)
     if bool(element):
         code_errors.append("Value already exists, it must be unique")
-    if name is None:
-        name_errors.append("Value is None")
-    if name == "":
+    if bool(name) is False:
         name_errors.append("Value is empty")
-    if symbol is None:
-        symbol_errors.append("Value is None")
-    if symbol == "":
+    if bool(symbol) is False:
         symbol_errors.append("Value is empty")
 
     if bool(code_errors):
@@ -207,43 +196,39 @@ def currency_validate(code, name, symbol):
     return error_messages
 
 
-def currency_select_all():
+def currency_select_all() -> list:
     ret = data_select("currencies")
     return ret
 
 
-def currency_select_by_id(id):
+def currency_select_by_id(id:int) -> list:
     whereClause = f"id={id}"
     ret = data_select("currencies", whereClause=whereClause)
     return ret
 
 
-def currency_select_by_code(code):
+def currency_select_by_code(code:str) -> list:
     whereClause = f"code='{code}'"
     ret = data_select("currencies", whereClause=whereClause)
     return ret
 
 
-def stock_insert(code, name):
+def stock_insert(code:str, name:str) -> int:
     ret = data_insert("stocks", code=code, name=name)
     return ret
 
 
-def stock_validate(code, name):
+def stock_validate(code:str, name:str) -> list:
     error_messages = {}
     code_errors = []
     name_errors = []
 
-    if code is None:
-        code_errors.append("Value is None")
-    if code == "":
+    if bool(code) is False:
         code_errors.append("Value is empty")
     element = stock_select_by_code(code)
     if bool(element):
         code_errors.append("Value already exists, it must be unique")
-    if name is None:
-        name_errors.append("Value is None")
-    if name == "":
+    if bool(name) is False:
         name_errors.append("Value is empty")
 
     if bool(code_errors):
@@ -254,29 +239,29 @@ def stock_validate(code, name):
     return error_messages
 
 
-def stock_select_all():
+def stock_select_all() -> list:
     ret = data_select("stocks")
     return ret
 
 
-def stock_select_by_id(id):
+def stock_select_by_id(id:int) -> list:
     whereClause = f"id={id}"
     ret = data_select("stocks", whereClause=whereClause)
     return ret
 
 
-def stock_select_by_code(code):
+def stock_select_by_code(code:str) -> list:
     whereClause = f"code='{code}'"
     ret = data_select("stocks", whereClause=whereClause)
     return ret
 
 
-def batch_insert(providerId, stockId, datetime, price, priceCurrencyId, amount, note):
+def batch_insert(providerId:int, stockId:int, datetime:str, price:float, priceCurrencyId:int, amount:float, note:str) -> int:
     ret = data_insert("batches", providerId=providerId, stockId=stockId, datetime=datetime, price=price, priceCurrencyId=priceCurrencyId, amount=amount, note=note)
     return ret
 
 
-def batch_validate(providerId, stockId, dateAndTime, price, priceCurrencyId, amount, note):
+def batch_validate(providerId:int, stockId:int, dateAndTime:str, price:float, priceCurrencyId:int, amount:float, note:str) -> list:
     error_messages = {}
     provider_errors = []
     stock_errors = []
@@ -293,24 +278,15 @@ def batch_validate(providerId, stockId, dateAndTime, price, priceCurrencyId, amo
     if len(stock) == 0:
         stock_errors.append("Value is not exists")
 
-    if dateAndTime is None:
-        datetime_errors.append("Value is None")
-    if dateAndTime == "":
+    if bool(dateAndTime) is False:
         datetime_errors.append("Value is empty")
-    dtt = None
     try:
-        dtt = datetime.fromisoformat(dateAndTime)
+        dateAndTime = datetime.fromisoformat(dateAndTime).strftime("%Y-%m-%d %H:%M:%S")
     except:
-        dtt = None
-    else:
-        dateAndTime = dtt.strftime("%Y-%m-%d %H:%M:%S")
-    if dtt is None:
         datetime_errors.append(f'Date and time error (format: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")})')
 
     price = float(str(price).replace(',', '.'))
-    if price is None:
-        price_errors.append("Value is None")
-    if price == "":
+    if bool(price) is False:
         price_errors.append("Value is empty")
     if str(price).replace('.','',1).isdigit() is False:
         price_errors.append("Value is not a number")
@@ -320,9 +296,7 @@ def batch_validate(providerId, stockId, dateAndTime, price, priceCurrencyId, amo
         priceCurrency_errors.append("Value is not exists")
 
     amount = float(str(amount).replace(',', '.'))
-    if amount is None:
-        amount_errors.append("Value is None")
-    if amount == "":
+    if bool(amount) is False:
         amount_errors.append("Value is empty")
     if str(amount).replace('.','',1).isdigit() is False:
         amount_errors.append("Value is not a number")
@@ -343,45 +317,45 @@ def batch_validate(providerId, stockId, dateAndTime, price, priceCurrencyId, amo
     return error_messages
 
 
-def batch_select_all():
+def batch_select_all() -> list:
     ret = data_select("batches")
     return ret
 
 
-def batch_select_id_all():
+def batch_select_id_all() -> list:
     ret = data_select("batches", fields=("id",))
     return ret
 
 
-def batch_select_by_id(id):
+def batch_select_by_id(id:int) -> list:
     whereClause = f"id={id}"
     ret = data_select("batches", whereClause=whereClause)
     return ret
 
 
-def batch_select_by_stockId(stockId):
+def batch_select_by_stockId(stockId:int) -> list:
     whereClause = f"stockId={stockId}"
     ret = data_select("batches", whereClause=whereClause)
     return ret
 
 
-def sale_insert(datetime, batchId, price, amount, note):
+def sale_insert(datetime:str, batchId:int, price:float, amount:float, note:str) -> int:
     ret = data_insert("sales", datetime=datetime, batchId=batchId, price=price, amount=amount, note=note)
     return ret
 
 
-def sale_select_all():
+def sale_select_all() -> list:
     ret = data_select("sales")
     return ret
 
 
-def sale_select_id_by_batchId(batchId):
+def sale_select_id_by_batchId(batchId:int) -> list:
     whereClause = f"batchId={batchId}"
     ret = data_select("sales", fields=("id",), whereClause=whereClause)
     return ret
 
 
-def sale_select_by_id(id):
+def sale_select_by_id(id:int) -> list:
     whereClause = f"id={id}"
     ret = data_select("sales", whereClause=whereClause)
     return ret
