@@ -9,81 +9,6 @@ def cls():
     os.system('cls' if os.name=='nt' else 'clear')
 
 
-def provider_start(args):
-    if args.subcommand2nd == "list":
-        provider.printAll()
-    elif args.subcommand2nd == "add":
-        id = None
-        code = args.code
-        name = args.name
-        obj = provider.Provider(id, code, name)
-        if len(obj.error) > 0:
-            print(f"Error: {obj.error}")
-        else:
-            print(f"New provider: {obj.getAsString()}")
-    else:
-        print("Subcommand error")
-        exit(0)
-
-
-def currency_start(args):
-    if args.subcommand2nd == "list":
-        currency.printAll()
-    elif args.subcommand2nd == "add":
-        id = None
-        code = args.code
-        name = args.name
-        symbol = args.symbol
-        obj = currency.Currency(id, code, name, symbol)
-        if len(obj.error) > 0:
-            print(f"Error: {obj.error}")
-        else:
-            print(f"New currency: {obj.getAsString()}")
-    else:
-        print("Subcommand error")
-        exit(0)
-
-
-def stock_start(args):
-    if args.subcommand2nd == "list":
-        stock.printAll()
-    elif args.subcommand2nd == "add":
-        id = None
-        code = args.code
-        name = args.name
-        obj = stock.Stock(id, code, name)
-        if len(obj.error) > 0:
-            print(f"Error: {obj.error}")
-        else:
-            print(f"New stock: {obj.getAsString()}")
-    else:
-        print("Subcommand error")
-        exit(0)
-
-
-def buy(args):
-    id = None
-    providerId = args.provider
-    stockId = args.stock
-    dt = args.datetime
-    price = args.price
-    priceCurrencyId = args.currency
-    amount = args.amount
-    note = args.note
-    obj = batch.Batch(None, providerId, stockId, dt, price, priceCurrencyId, amount, note)
-    if len(obj.error) > 0:
-        print(f"Error: {obj.error}")
-    else:
-        print("New batch")
-        obj.print()
-
-
-def list_batches(args):
-    elements = batch.getAll()
-    for element in elements:
-        batch.Batch(element).print()
-
-
 def menu_loop():
     menu_code = "menu_main"
     while(True):
@@ -107,8 +32,41 @@ def menu_loop():
             menu_code = menu_currency(True)
         elif menu_code == "menu_currency_new":
             menu_code = menu_currency_new()
+        elif menu_code == "menu_batch":
+            menu_code = menu_batch()
+        elif menu_code == "menu_batch_list":
+            menu_code = menu_batch(True)
+        elif menu_code == "menu_batch_buy":
+            menu_code = menu_batch_buy()
+        elif menu_code == "menu_batch_sell":
+            menu_code = menu_batch()
         elif menu_code == "program_exit":
             exit()
+
+
+def print_menu_option(head, menu_options, footer=None):
+    cls()
+    if head is not None:
+        print(head)
+    for key in menu_options.keys():
+        print (key, '--', menu_options[key])
+    if footer is not None:
+        print(footer)
+    option = None
+    while option is None:
+        try:
+            option = int(input("Enter your choice: "))
+        except:
+            print("Wrong input. Please enter a number from list above.")
+            option = None
+            continue
+
+        if option in menu_options.keys():
+            return option
+        else:
+            print("Invalid option. Please enter a number from list above.")
+            option = None
+            continue
 
 
 def menu_main():
@@ -117,6 +75,7 @@ def menu_main():
         1: "Provider",
         2: "Stock",
         3: "Currency",
+        4: "Batch",
         0: "Exit program"
     }
     option = print_menu_option(head, menu_options)
@@ -128,6 +87,8 @@ def menu_main():
         return "menu_stock"
     elif option == 3:
         return "menu_currency"
+    elif option == 4:
+        return "menu_batch"
 
 
 def menu_provider(list_providers=False):
@@ -162,7 +123,7 @@ def menu_provider_new():
     code = input("Type provider code: ")
     name = input("Type provider name: ")
     obj = provider.Provider(id, code, name)
-    if len(obj.error) > 0:
+    if bool(obj.error):
         print(f"Error: {obj.error}")
     else:
         print(f"New provider: {obj.getAsString()}")
@@ -202,7 +163,7 @@ def menu_stock_new():
     code = input("Type stock code: ")
     name = input("Type stock name: ")
     obj = stock.Stock(id, code, name)
-    if len(obj.error) > 0:
+    if bool(obj.error):
         print(f"Error: {obj.error}")
     else:
         print(f"New stock: {obj.getAsString()}")
@@ -244,7 +205,7 @@ def menu_currency_new():
     name = input("Type currency name: ")
     symbol = input("Type currency symbol: ")
     obj = currency.Currency(id, code, name, symbol)
-    if len(obj.error) > 0:
+    if bool(obj.error):
         print(f"Error: {obj.error}")
     else:
         print(f"New currency: {obj.getAsString()}")
@@ -252,29 +213,64 @@ def menu_currency_new():
     return "menu_currency"
 
 
-def print_menu_option(head, menu_options, footer=None):
-    cls()
-    if head is not None:
-        print(head)
-    for key in menu_options.keys():
-        print (key, '--', menu_options[key])
-    if footer is not None:
-        print(footer)
-    option = None
-    while option is None:
-        try:
-            option = int(input("Enter your choice: "))
-        except:
-            print("Wrong input. Please enter a number from list above.")
-            option = None
-            continue
+def menu_batch(list_batches=False):
+    head = "Batch menu"
+    menu_options = {
+        1: "List",
+        2: "Buy",
+        3: "Sell",
+        0: "Back to main menu"
+    }
+    footer = None
+    if list_batches is True:
+        text = ""
+        elements = batch.getAll()
+        for element in elements:
+            text += batch.Batch(element).getAsString() + "\n"
+        if text != "":
+            footer = text[:-1]
+    option = print_menu_option(head, menu_options, footer=footer)
+    if option == 0:
+        return "menu_main"
+    elif option == 1:
+        return "menu_batch_list"
+    elif option == 2:
+        return "menu_batch_buy"
+    elif option == 3:
+        return "menu_batch_sell"
 
-        if option in menu_options.keys():
-            return option
-        else:
-            print("Invalid option. Please enter a number from list above.")
-            option = None
-            continue
+
+def menu_batch_buy():
+    id = None
+    providerId = None
+    stockId = None
+    dateTime = None
+    price = None
+    priceCurrencyId = None
+    amount = None
+    note = None
+
+    provider.printAll()
+    providerId = input("Type provider ID: ")
+    stock.printAll()
+    stockId = input("Type stock ID: ")
+    dt = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    dateTime = input(f"Type date & time ({dt}): ")
+    if bool(dateTime) is False:
+        dateTime = dt
+    print(dateTime)
+    price = input("Type price: ")
+    currency.printAll()
+    priceCurrencyId = input("Type price currency ID: ")
+    amount = input("Type amount: ")
+    note = input("Type note: ")
+    obj = batch.Batch(id, providerId, stockId, dateTime, price, priceCurrencyId, amount, note)
+    if bool(obj.error):
+        print(f"Error: {obj.error}")
+    else:
+        print(f"New batch:\n{obj.getAsString()}")
+    input("Press Enter to continue...")
+    return "menu_batch"
 
 
 def main():
@@ -362,6 +358,81 @@ def main():
     else:
         print("Subcommand error")
         exit(0)
+
+
+def provider_start(args):
+    if args.subcommand2nd == "list":
+        provider.printAll()
+    elif args.subcommand2nd == "add":
+        id = None
+        code = args.code
+        name = args.name
+        obj = provider.Provider(id, code, name)
+        if bool(obj.error):
+            print(f"Error: {obj.error}")
+        else:
+            print(f"New provider: {obj.getAsString()}")
+    else:
+        print("Subcommand error")
+        exit(0)
+
+
+def currency_start(args):
+    if args.subcommand2nd == "list":
+        currency.printAll()
+    elif args.subcommand2nd == "add":
+        id = None
+        code = args.code
+        name = args.name
+        symbol = args.symbol
+        obj = currency.Currency(id, code, name, symbol)
+        if bool(obj.error):
+            print(f"Error: {obj.error}")
+        else:
+            print(f"New currency: {obj.getAsString()}")
+    else:
+        print("Subcommand error")
+        exit(0)
+
+
+def stock_start(args):
+    if args.subcommand2nd == "list":
+        stock.printAll()
+    elif args.subcommand2nd == "add":
+        id = None
+        code = args.code
+        name = args.name
+        obj = stock.Stock(id, code, name)
+        if bool(obj.error):
+            print(f"Error: {obj.error}")
+        else:
+            print(f"New stock: {obj.getAsString()}")
+    else:
+        print("Subcommand error")
+        exit(0)
+
+
+def buy(args):
+    id = None
+    providerId = args.provider
+    stockId = args.stock
+    dt = args.datetime
+    price = args.price
+    priceCurrencyId = args.currency
+    amount = args.amount
+    note = args.note
+    obj = batch.Batch(None, providerId, stockId, dt, price, priceCurrencyId, amount, note)
+    if bool(obj.error):
+        print(f"Error: {obj.error}")
+    else:
+        print("New batch")
+        obj.print()
+
+
+def list_batches(args):
+    elements = batch.getAll()
+    for element in elements:
+        batch.Batch(element).print()
 
 
 if __name__ == '__main__':

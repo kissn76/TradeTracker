@@ -1,4 +1,5 @@
 from . import db_sqlite as db
+from decimal import *
 
 
 class Sale:
@@ -28,16 +29,18 @@ class Sale:
 
     def load_by_id(self, id):
         p = db.sale_select_by_id(id)
-        if len(p) > 0:
-            self.id = p[0][0]
-            self.setClass(p[0][1], p[0][2], p[0][3], p[0][4], p[0][5])
+        if bool(p):
+            p = p[0]
+            id, datetime, batchId, price, amount, note = p
+            self.id = id
+            self.setClass(datetime, batchId, price, amount, note)
 
 
     def setClass(self, datetime, batchId, price, amount, note):
         self.datetime = datetime
         self.batchId = batchId
-        self.price = price
-        self.amount = amount
+        self.price = Decimal(str(price))
+        self.amount = Decimal(str(amount))
         self.note = note
 
 

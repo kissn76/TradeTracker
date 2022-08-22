@@ -83,10 +83,10 @@ def data_insert(table, **values):
     ret = None
 
     conn = create_connection()
-    if conn is not None:
+    if bool(conn):
         try:
             cur = conn.cursor()
-            cur.execute(sql, values.values())
+            cur.execute(sql, tuple(values.values()))
             conn.commit()
             ret = cur.lastrowid
         except Error as e:
@@ -108,7 +108,7 @@ def data_select(table, fields=("*",), whereClause=None):
         sql += f" WHERE {whereClause}"
 
     conn = create_connection()
-    if conn is not None:
+    if bool(conn):
         try:
             cur = conn.cursor()
             cur.execute(sql)
@@ -118,6 +118,7 @@ def data_select(table, fields=("*",), whereClause=None):
     else:
         print("Error! Cannot create the database connection.")
     conn.close()
+
 
     return ret
 
@@ -137,16 +138,16 @@ def provider_validate(code, name):
     if code == "":
         code_errors.append("Value is empty")
     element = provider_select_by_code(code)
-    if len(element) > 0:
+    if bool(element):
         code_errors.append("Value already exists, it must be unique")
     if name is None:
         name_errors.append("Value is None")
     if name == "":
         name_errors.append("Value is empty")
 
-    if len(code_errors) > 0:
+    if bool(code_errors):
         error_messages.update({"code": code_errors})
-    if len(name_errors) > 0:
+    if bool(name_errors):
         error_messages.update({"name": name_errors})
 
     return error_messages
@@ -164,7 +165,7 @@ def provider_select_by_id(id):
 
 
 def provider_select_by_code(code):
-    whereClause = f"code={code}"
+    whereClause = f"code='{code}'"
     ret = data_select("providers", whereClause=whereClause)
     return ret
 
@@ -185,7 +186,7 @@ def currency_validate(code, name, symbol):
     if code == "":
         code_errors.append("Value is empty")
     element = currency_select_by_code(code)
-    if len(element) > 0:
+    if bool(element):
         code_errors.append("Value already exists, it must be unique")
     if name is None:
         name_errors.append("Value is None")
@@ -196,11 +197,11 @@ def currency_validate(code, name, symbol):
     if symbol == "":
         symbol_errors.append("Value is empty")
 
-    if len(code_errors) > 0:
+    if bool(code_errors):
         error_messages.update({"code": code_errors})
-    if len(name_errors) > 0:
+    if bool(name_errors):
         error_messages.update({"name": name_errors})
-    if len(symbol_errors) > 0:
+    if bool(symbol_errors):
         error_messages.update({"symbol": symbol_errors})
 
     return error_messages
@@ -218,7 +219,7 @@ def currency_select_by_id(id):
 
 
 def currency_select_by_code(code):
-    whereClause = f"code={code}"
+    whereClause = f"code='{code}'"
     ret = data_select("currencies", whereClause=whereClause)
     return ret
 
@@ -238,16 +239,16 @@ def stock_validate(code, name):
     if code == "":
         code_errors.append("Value is empty")
     element = stock_select_by_code(code)
-    if len(element) > 0:
+    if bool(element):
         code_errors.append("Value already exists, it must be unique")
     if name is None:
         name_errors.append("Value is None")
     if name == "":
         name_errors.append("Value is empty")
 
-    if len(code_errors) > 0:
+    if bool(code_errors):
         error_messages.update({"code": code_errors})
-    if len(name_errors) > 0:
+    if bool(name_errors):
         error_messages.update({"name": name_errors})
 
     return error_messages
@@ -265,7 +266,7 @@ def stock_select_by_id(id):
 
 
 def stock_select_by_code(code):
-    whereClause = f"code={code}"
+    whereClause = f"code='{code}'"
     ret = data_select("stocks", whereClause=whereClause)
     return ret
 
@@ -302,7 +303,7 @@ def batch_validate(providerId, stockId, dateAndTime, price, priceCurrencyId, amo
     except:
         dtt = None
     else:
-        dateAndTime = dtt
+        dateAndTime = dtt.strftime("%Y-%m-%d %H:%M:%S")
     if dtt is None:
         datetime_errors.append(f'Date and time error (format: {datetime.now().strftime("%Y-%m-%d %H:%M:%S")})')
 
@@ -326,17 +327,17 @@ def batch_validate(providerId, stockId, dateAndTime, price, priceCurrencyId, amo
     if str(amount).replace('.','',1).isdigit() is False:
         amount_errors.append("Value is not a number")
 
-    if len(provider_errors) > 0:
+    if bool(provider_errors):
         error_messages.update({"provider": provider_errors})
-    if len(stock_errors) > 0:
+    if bool(stock_errors):
         error_messages.update({"stock": stock_errors})
-    if len(datetime_errors) > 0:
+    if bool(datetime_errors):
         error_messages.update({"datetime": datetime_errors})
-    if len(price_errors) > 0:
+    if bool(price_errors):
         error_messages.update({"price": price_errors})
-    if len(priceCurrency_errors) > 0:
+    if bool(priceCurrency_errors):
         error_messages.update({"priceCurrency": priceCurrency_errors})
-    if len(amount_errors) > 0:
+    if bool(amount_errors):
         error_messages.update({"amount": amount_errors})
 
     return error_messages

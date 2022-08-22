@@ -16,8 +16,8 @@ def create_base():
 
 
 def main():
-    setup.create_tables()
-    setup.create_base()
+    create_tables()
+    create_base()
 
 
 if __name__ == '__main__':

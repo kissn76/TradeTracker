@@ -33,9 +33,11 @@ class Currency:
 
     def load_by_id(self, id):
         p = db.currency_select_by_id(id)
-        if len(p) > 0:
-            self.id = p[0][0]
-            self.setClass(p[0][1], p[0][2], p[0][3])
+        if bool(p):
+            p = p[0]
+            id, code, name, symbol = p
+            self.id = id
+            self.setClass(code, name, symbol)
 
 
     def setClass(self, code, name, symbol):
@@ -72,7 +74,8 @@ def getAll():
     objects = {}
     elements = db.currency_select_all()
     for element in elements:
-        obj = Currency(element[0])
+        id = element[0]
+        obj = Currency(id)
         objects.update({obj.getId(): obj})
     return objects
 

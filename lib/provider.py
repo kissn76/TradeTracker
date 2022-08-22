@@ -8,7 +8,7 @@ class Provider:
         self.name = None
         self.error = {}
 
-        if id is not None:
+        if bool(id):
             self.load_by_id(id)
         else:
             self.setClass(code, name)
@@ -32,9 +32,11 @@ class Provider:
 
     def load_by_id(self, id):
         p = db.provider_select_by_id(id)
-        if len(p) > 0:
-            self.id = p[0][0]
-            self.setClass(p[0][1], p[0][2])
+        if bool(p):
+            p = p[0]
+            id, code, name = p
+            self.id = id
+            self.setClass(code, name)
 
 
     def setClass(self, code, name):
@@ -66,7 +68,8 @@ def getAll():
     objects = {}
     elements = db.provider_select_all()
     for element in elements:
-        obj = Provider(element[0])
+        id = element[0]
+        obj = Provider(id)
         objects.update({obj.getId(): obj})
     return objects
 

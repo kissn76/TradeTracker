@@ -32,9 +32,11 @@ class Stock:
 
     def load_by_id(self, id):
         p = db.stock_select_by_id(id)
-        if len(p) > 0:
-            self.id = p[0][0]
-            self.setClass(p[0][1], p[0][2])
+        if bool(p):
+            p = p[0]
+            id, code, name = p
+            self.id = id
+            self.setClass(code, name)
 
 
     def setClass(self, code, name):
@@ -66,7 +68,8 @@ def getAll():
     objects = {}
     elements = db.stock_select_all()
     for element in elements:
-        obj = Stock(element[0])
+        id = element[0]
+        obj = Stock(id)
         objects.update({obj.getId(): obj})
     return objects
 

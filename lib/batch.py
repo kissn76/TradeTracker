@@ -1,6 +1,7 @@
 from . import db_sqlite as db
 from . import provider, stock, sale, currency
 import dateutil.parser as dtup
+from decimal import *
 
 
 class Batch:
@@ -46,9 +47,11 @@ class Batch:
 
     def load_by_id(self, id):
         p = db.batch_select_by_id(id)
-        if len(p) > 0:
-            self.id = p[0][0]
-            self.setClass(p[0][1], p[0][2], p[0][3], p[0][4], p[0][5], p[0][6], p[0][7])
+        if bool(p):
+            p = p[0]
+            id, providerId, stockId, datetime, price, priceCurrencyId, amount, note = p
+            self.id = id
+            self.setClass(providerId, stockId, datetime, price, priceCurrencyId, amount, note)
             self.setObjects()
 
 
@@ -56,9 +59,9 @@ class Batch:
         self.providerId = providerId
         self.stockId = stockId
         self.datetime = datetime
-        self.price = float(str(price).replace(',', '.'))
+        self.price = Decimal(str(price).replace(',', '.'))
         self.priceCurrencyId = priceCurrencyId
-        self.amount = float(str(amount).replace(',', '.'))
+        self.amount = Decimal(str(amount).replace(',', '.'))
         self.note = note
         self.balance = self.amount
 
@@ -126,24 +129,27 @@ class Batch:
         return self.balance
 
 
-    def print(self):
+    def getAsString(self):
+        ret = ""
         note = ""
         if self.note is not None:
             note = self.note
 
-        print(f"Batch ID: {str(self.id)}")
-        print(f"Provider: {self.provider.getAsString()}")
-        print(f"Stock: {self.stock.getAsString()}")
-        print(f"Balance: {self.balance}")
-        print(f"Note: {note}\n")
+        ret += f"Batch ID: {str(self.id)}\n"
+        ret += f"Provider: {self.provider.getAsString()}\n"
+        ret += f"Stock: {self.stock.getAsString()}\n"
+        ret += f"Balance: {self.balance}\n"
+        ret += f"Note: {note}\n\n"
 
         balance = self.amount
         batch_unit_price = self.price / self.amount
         profit = 0
-        print(f"{'Date':<19}|{'Price':>16}|{'Amount':>16}|{'Balance':>16}|{'Unit price':>16}|{'Unit profit':>16}|{'Line profit':>16}|{'Profit':>16}|{'Note':^35}")
-        print(f"{'':<19}|{self.priceCurrency.getSymbol():>16}|{'':>16}|{'':>16}|{self.priceCurrency.getSymbol():>16}|{self.priceCurrency.getSymbol():>16}|{self.priceCurrency.getSymbol():>16}|{self.priceCurrency.getSymbol():>16}|{'Note':^35}")
-        print(f"{'':=^170}")
-        print(f"{self.datetime:19}|{self.price:16,.2f}|{self.amount:16,.2f}|{balance:16,.2f}|{batch_unit_price:16,.2f}|{'':16}|{'':16}|{'':16}|{note:>35}".replace(",", " "))
+
+        ret += f"{'Date':<19}|{'Price':>16}|{'Amount':>16}|{'Balance':>16}|{'Unit price':>16}|{'Unit profit':>16}|{'Line profit':>16}|{'Profit':>16}|{'Note':^35}\n"
+        ret += f"{'':<19}|{self.priceCurrency.getSymbol():>16}|{'':>16}|{'':>16}|{self.priceCurrency.getSymbol():>16}|{self.priceCurrency.getSymbol():>16}|{self.priceCurrency.getSymbol():>16}|{self.priceCurrency.getSymbol():>16}|{'Note':^35}\n"
+        ret += f"{'':=^170}\n"
+        ret += f"{self.datetime:19}|{self.price:16,.2f}|{self.amount:16,.2f}|{balance:16,.2f}|{batch_unit_price:16,.2f}|{'':16}|{'':16}|{'':16}|{note:>35}\n".replace(",", " ")
+        
         for s in self.sales:
             note = ""
             if s.getNote() is not None:
@@ -153,19 +159,28 @@ class Batch:
             unit_profit = sale_unit_price - batch_unit_price
             sale_profit = unit_profit * s.getAmount()
             profit += sale_profit
-            print(f"{s.getDatetime():19}|{s.getPrice():16,.2f}|{(s.getAmount() * -1):16,.2f}|{balance:16,.2f}|{sale_unit_price:16,.2f}|{unit_profit:16,.2f}|{sale_profit:16,.2f}|{profit:16,.2f}|{note:>35}".replace(",", " "))
+            
+            ret += f"{s.getDatetime():19}|{s.getPrice():16,.2f}|{(s.getAmount() * -1):16,.2f}|{balance:16,.2f}|{sale_unit_price:16,.2f}|{unit_profit:16,.2f}|{sale_profit:16,.2f}|{profit:16,.2f}|{note:>35}\n".replace(",", " ")
 
-        print(f"{'':=^170}")
         balance_string = f"{balance:,.2f}".replace(",", " ")
         profit_string = f"{profit:,.2f} {self.priceCurrency.getSymbol()}".replace(",", " ")
-        print(f"{'':54}{balance_string:>16}{profit_string:>68}")
+
+        ret += f"{'':=^170}\n"
+        ret += f"{'':54}{balance_string:>16}{profit_string:>68}"
+
+        return ret
+
+
+    def print(self):
+        print(self.getAsString())
 
 
 def getAll():
     objects = {}
     elements = db.batch_select_all()
     for element in elements:
-        obj = Batch(element[0])
+        id = element[0]
+        obj = Batch(id)
         objects.update({obj.getId(): obj})
     return objects
 
@@ -174,8 +189,19 @@ def getByStock(stockId):
     objects = {}
     elements = db.batch_select_by_stockId(stockId)
     for element in elements:
-        obj = Batch(element[0])
+        id = element[0]
+        obj = Batch(id)
         objects.update({obj.getId(): obj})
+    return objects
+
+
+def getByStockWithBalance(stockId):
+    objects = {}
+    allObject = getByStock(stockId)
+    for obj in allObject:
+        obj = Batch(obj)
+        if obj.getBalance() > 0.0:
+            objects.update({obj.getId(): obj})
     return objects
 
 
@@ -198,7 +224,7 @@ def printStock(stockId):
         for saleObj in sales:
             if saleObj.getId() is not None:
                 amount = saleObj.getAmount()
-                price = saleObj.getPrice()
+                price = (saleObj.getPrice() * -1.0)
                 dateAndTime = saleObj.getDatetime()
                 note = saleObj.getNote()
                 transactionSell = [dateAndTime, price, currency.getCode(), (amount * -1), note, buy_unit_price]
@@ -208,15 +234,10 @@ def printStock(stockId):
     balance = 0
     profit = 0
     print(f"Stock: {stockObj.getAsString()}")
-    print(f"{'Date':<19}|{'Price':>16}|{'Amount':>16}|{'Balance':>16}|{'Unit price':>16}|{'Note':^35}")
+    print(f"{'Date':<19}|{'Price':>20}|{'Amount':>16}|{'Balance':>16}|{'Unit price':>16}|{'Line profit':>16}|{'Profit':>16}|{'Note':^35}")
     print(f"{'':=^170}")
     for tr in transactionsSorted:
-        date = tr[0]
-        price = tr[1]
-        currency = tr[2]
-        amount = tr[3]
-        note = tr[4]
-        buy_unit_price = tr[5]
+        date, price, currency, amount, note, buy_unit_price = tr
         buy_price = 0.0
         line_profit = 0.0
         if buy_unit_price is not None:
@@ -228,8 +249,10 @@ def printStock(stockId):
         balance += amount
         price_string = f"{price:,.2f} {currency}".replace(",", " ")
         amount_string = f"{amount:,.2f}".replace(",", " ")
+        balance_string = f"{balance:,.2f}".replace(",", " ")
         unit_price_string = f"{(price / amount):,.2f}".replace(",", " ")
-        print(f"{date:19}|{price_string:>16}|{amount_string:>16}|{balance:16,.2f}|{unit_price_string:>16}|{line_profit:16,.2f}|{profit:16,.2f}|{note:>35}")
+        line_profit_string = f"{line_profit:,.2f}".replace(",", " ")
+        profit_string = f"{profit:,.2f}".replace(",", " ")
+        print(f"{date:19}|{price_string:>20}|{amount_string:>16}|{balance_string:>16}|{unit_price_string:>16}|{line_profit_string:>16}|{profit_string:>16}|{note:>35}")
     print(f"{'':=^170}")
-    balance_string = f"{balance:,.2f}".replace(",", " ")
-    print(f"{'':54}{balance_string:>16}")
+    print(f"{'':58}{balance_string:>16}{'':35}{profit_string:>16}")
